@@ -145,16 +145,62 @@ class wind_Reyleigh:
         plt.ylabel('wind velocity (m/s)', fontsize = '16')
         plt.grid(linestyle='--',linewidth = '1')
 
-        pltName = 'windData.png'
+        pltName = 'windData_Reyleigh.png'
         plt.show()
         plt.close()
         plt.savefig(pltName,dpi = 100)
-
-
-# a test case for wind source class
+# a test case for wind source class (Reyleigh distribution)
 #wind = wind_Reyleigh(20,7,20,0,60,60)
 #windData = wind.geneData()
 #wind.plt_v_dis()
 #wind.plt_windData()
 #print (windData)
+
+# class to read wind data
+class wind_readData:
+    def __init__(self):
+        self.time = [] # time array
+        self.wind = [] # wind velocity array
+
+        self.windData = [] # time depnent wind data
+
+    def readFile(self,inFile):
+        time = []
+        wind = []
+        windData = []
+        with open (inFile,'r') as f:
+            content = f.readlines()
+        f.close()
+
+        for line in content:
+            try:
+                float(line.split()[0])
+                data = []
+                time.append(line.split()[0])
+                wind.append(line.split()[1])
+                data.append(line.split()[0])
+                data.append(line.split()[1])
+                windData.append(data)
+            except ValueError:
+                pass
+        
+        self.time = self.time + time
+        self.wind = self.wind + wind
+        self.windData = self.windData + windData
+
+        return windData
+
+    # plot time dependent wind velocity
+    def plt_windData(self): 
+        plt.figure(figsize = (12,8))
+        plt.plot(self.time,self.wind, color = 'r')
+        plt.xlabel('time',fontsize = '16')
+        plt.xlim(left = 0.0)
+        plt.ylabel('wind velocity (m/s)', fontsize = '16')
+        plt.grid(linestyle='--',linewidth = '1')
+
+        pltName = 'windData_Source.png'
+        plt.show()
+        plt.close()
+        plt.savefig(pltName,dpi = 100)
 
