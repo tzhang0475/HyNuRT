@@ -1,11 +1,11 @@
-# module to read or generate Reyleigh Distribution winddata
+# module to read or generate Rayleigh Distribution winddata
 import math
 import random
 import numpy as np
 import matplotlib.pyplot as plt
 
-# generate Reyleigh distribution wind data
-class wind_Reyleigh:
+# generate Rayleigh distribution wind data
+class wind_Rayleigh:
     def __init__(self,v_max,v_m,n,sTime,eTime,nData):
         self.v_max = v_max # max wind velocity
         self.v_m = v_m # mean wind velocity
@@ -27,7 +27,7 @@ class wind_Reyleigh:
         self.windData = [] # time depnent wind data
 
     # Rayleigh probablity distribution function
-    def Reyleigh_(self):
+    def Rayleigh_(self):
         pi = 3.141592653
         dv = self.v_max/self.n
         const = pi/2*dv**2/self.v_m**2 # constant in the distribution
@@ -94,7 +94,7 @@ class wind_Reyleigh:
         wind = []
         for i in range(len(self.time)):
      #       print ('length cdf: ',len(self.cdf))
-            v_wind = wind_Reyleigh.v_wind_(self)
+            v_wind = wind_Rayleigh.v_wind_(self)
             wind.append(v_wind)
 
         self.wind = self.wind + wind
@@ -110,11 +110,11 @@ class wind_Reyleigh:
 
     # main function to generate wind data
     def geneData(self):
-        wind_Reyleigh.Reyleigh_(self)
-        wind_Reyleigh.v_dis_(self)
-        wind_Reyleigh.cdf_cal_(self)
-        wind_Reyleigh.windCurve_(self)
-        wind_Reyleigh.windData_(self)
+        wind_Rayleigh.Rayleigh_(self)
+        wind_Rayleigh.v_dis_(self)
+        wind_Rayleigh.cdf_cal_(self)
+        wind_Rayleigh.windCurve_(self)
+        wind_Rayleigh.windData_(self)
 
         windData = self.windData
     
@@ -132,7 +132,7 @@ class wind_Reyleigh:
         plt.ylabel('probability', fontsize = '16')
         plt.grid(linestyle='--',linewidth = '1')
 
-        pltName = 'wind_v_Reyleigh.png'
+        pltName = 'wind_v_Rayleigh.png'
         plt.show()
         plt.close()
         plt.savefig(pltName,dpi = 100)
@@ -145,12 +145,12 @@ class wind_Reyleigh:
         plt.ylabel('wind velocity (m/s)', fontsize = '16')
         plt.grid(linestyle='--',linewidth = '1')
 
-        pltName = 'windData_Reyleigh.png'
+        pltName = 'windData_Rayleigh.png'
         plt.show()
         plt.close()
         plt.savefig(pltName,dpi = 100)
-# a test case for wind source class (Reyleigh distribution)
-#wind = wind_Reyleigh(20,7,20,0,60,60)
+# a test case for wind source class (Rayleigh distribution)
+#wind = wind_Rayleigh(20,7,20,0,60,60)
 #windData = wind.geneData()
 #wind.plt_v_dis()
 #wind.plt_windData()
