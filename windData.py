@@ -4,6 +4,7 @@ import random
 import numpy as np
 import matplotlib.pyplot as plt
 
+
 # generate Rayleigh distribution wind data
 class wind_Rayleigh:
     def __init__(self,v_max,v_m,n,sTime,eTime,nData):
@@ -27,7 +28,7 @@ class wind_Rayleigh:
         self.windData = [] # time depnent wind data
 
     # Rayleigh probablity distribution function
-    def Rayleigh_(self):
+    def _Rayleigh_(self):
         pi = 3.141592653
         dv = self.v_max/self.n
         const = pi/2*dv**2/self.v_m**2 # constant in the distribution
@@ -43,7 +44,7 @@ class wind_Rayleigh:
 #        return pdf
 
     # calculate the velocity distribution
-    def v_dis_(self):
+    def _v_dis_(self):
         dv = self.v_max/self.n
         v_data = []
         v_data.append(0.001) # set a minimal velocity of wind
@@ -56,7 +57,7 @@ class wind_Rayleigh:
 #        return v_data
 
     # calcualte cumulated probability distribution
-    def cdf_cal_(self):
+    def _cdf_cal_(self):
         cdf = []
         cdf.append(0.0)
         for i in range(len(self.pdf)):
@@ -67,7 +68,7 @@ class wind_Rayleigh:
         self.cdf = self.cdf + cdf
 
     # generate a random wind velocity according to cdf
-    def v_wind_(self):
+    def _v_wind_(self):
         seed = random.random()
         cdf = []
         for value in self.cdf:
@@ -90,7 +91,7 @@ class wind_Rayleigh:
         return v_wind
 
     # generate time dependent wind velocity curve
-    def windCurve_(self):
+    def _windCurve_(self):
         wind = []
         for i in range(len(self.time)):
      #       print ('length cdf: ',len(self.cdf))
@@ -100,7 +101,7 @@ class wind_Rayleigh:
         self.wind = self.wind + wind
 
     # merge time into one array
-    def windData_(self):
+    def _windData_(self):
         windData = []
         for i in range(len(self.time)):
             data = []
@@ -110,11 +111,11 @@ class wind_Rayleigh:
 
     # main function to generate wind data
     def geneData(self):
-        wind_Rayleigh.Rayleigh_(self)
-        wind_Rayleigh.v_dis_(self)
-        wind_Rayleigh.cdf_cal_(self)
-        wind_Rayleigh.windCurve_(self)
-        wind_Rayleigh.windData_(self)
+        wind_Rayleigh._Rayleigh_(self)
+        wind_Rayleigh._v_dis_(self)
+        wind_Rayleigh._cdf_cal_(self)
+        wind_Rayleigh._windCurve_(self)
+        wind_Rayleigh._windData_(self)
 
         windData = self.windData
     
@@ -164,7 +165,7 @@ class wind_readData:
 
         self.windData = [] # time depnent wind data
 
-    def readFile(self,inFile):
+    def _readFile_(self,inFile):
         time = []
         wind = []
         windData = []
