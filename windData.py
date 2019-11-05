@@ -103,7 +103,7 @@ class wind_Rayleigh:
         wind = []
         for i in range(len(self.time)):
      #       print ('length cdf: ',len(self.cdf))
-            v_wind = wind_Rayleigh.v_wind_(self)
+            v_wind = wind_Rayleigh._v_wind_(self)
             wind.append(v_wind)
 
         self.wind = self.wind + wind
@@ -118,7 +118,7 @@ class wind_Rayleigh:
             self.windData.append(data)
 
     # main function to generate wind data
-    def geneData(self):
+    def genData(self):
         wind_Rayleigh._Rayleigh_(self)
         wind_Rayleigh._v_dis_(self)
         wind_Rayleigh._cdf_cal_(self)
@@ -158,12 +158,17 @@ class wind_Rayleigh:
         plt.show()
         plt.close()
         plt.savefig(pltName,dpi = 100)
-# a test case for wind source class (Rayleigh distribution)
-#wind = wind_Rayleigh(20,7,20,0,60,60)
-#windData = wind.geneData()
-#wind.plt_v_dis()
-#wind.plt_windData()
-#print (windData)
+
+""" 
+#a test case for wind source class (Rayleigh distribution)
+
+wind = wind_Rayleigh(20,7,20,0,60,60)
+windData = wind.genData()
+wind.plt_v_dis()
+wind.plt_windData()
+print (windData)
+"""
+
 
 # class to read wind data
 class wind_readData:
