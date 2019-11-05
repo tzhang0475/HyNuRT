@@ -1,9 +1,11 @@
-"
-Author: tzhang
-Create Date:   04/11/2019
-Last Modified: 04/11/2019
-Modified by: tzhang
-"
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# File              : turbine_data.py
+# Author            : tzhang
+# Date              : 04.11.2019
+# Last Modified Date: 05.11.2019
+# Last Modified By  : tzhang
+
 ############################################################################
 # wind turbine coefficients                                                #
 # - user defined wind turbine coefficients                                 #

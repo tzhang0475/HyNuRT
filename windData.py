@@ -1,3 +1,11 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# File              : windData.py
+# Author            : tzhang
+# Date              : 26.10.2019
+# Last Modified Date: 05.11.2019
+# Last Modified By  : tzhang
+
 # module to read or generate Rayleigh Distribution winddata
 import math
 import random

@@ -1,3 +1,11 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# File              : material.py
+# Author            : tzhang
+# Date              : 28.10.2019
+# Last Modified Date: 05.11.2019
+# Last Modified By  : tzhang
+
 # a library for material properties
 
 # air properties (constant or calculated by ideal gas equation)

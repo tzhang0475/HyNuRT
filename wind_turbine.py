@@ -1,13 +1,26 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# File              : wind_turbine.py
+# Author            : tzhang
+# Date              : 28.10.2019
+# Last Modified Date: 05.11.2019
+# Last Modified By  : tzhang
 import math
 import numpy as np
+import turbine_data
 
-# a module simulate wind turbine
-# the model is based on modelica windPowerPlant (Eberhart [2015])
+"
+a module simulate wind turbine                                           
+the model is based on modelica windPowerPlant (Eberhart [2015])          
+
+"
+
 class wind_Turbine:
     # parameters describing a wind turbine
-    def __init__(self,d_wing,P_lim):
+    def __init__(self,d_wing,P_lim,J_turbine):
         self.d_wing = d_wing   # diameter of the turbine
         self.P_lim  = P_lim    # output power limit of the wind turbine, in W (usually the limit is about 2 MW, normaly between 0.5 to 3.6 MW)
+        self.J_turbine = J_turbine  # moment of inertia of turbine
         self.coeffs = []        # coefficients for wind turbine
         self.P0 = 0.0          # the harvest power of wind turbine    
 
@@ -22,8 +35,9 @@ class wind_Turbine:
 
     def P_harvest(self,Pw):        # calculate the harvest wind energy of a wind turbine
         P = Pw * self.cp           # harvest power is the product of wind power and wind turbine efficiency 
+        Power = max(0.0,P)         # eleminate negative  power, minimal power to 0
 
-        self.P0 = self.P0 + P
+        self.P0 = self.P0 + Power
     
     # calculate wind turbine efficiency, 
     def cp_cal(self,beta,lambda_1):
@@ -68,69 +82,5 @@ class wind_Turbine:
         beta = t1 + t2 + t3 + t4
 
         return beta
-        
-    # pre-defined wind turbine coefficients with Herier (Herier [2009])
-    def c_Herier(self):
-        coeffs = []  
-        c0 = None  # a dummy to eliminate misunderstanding
-        # c1 to c6 are wind turbine coefficients
-        c1 = 0.5
-        c2 = 116.0
-        c3 = 0.4
-        c4 = 5.0
-        c5 = 21.0
-        c6 = 0.0
 
-        coeffs.append(c0)
-        coeffs.append(c1)
-        coeffs.append(c2)
-        coeffs.append(c3)
-        coeffs.append(c4)
-        coeffs.append(c5)
-        coeffs.append(c6)
-
-        self.coeffs = self.coeffs + coeffs
-
-    # pre-defined wind turbine coefficients with Thongam el al (Thongam el al [2009])
-    def c_Thongam(self):
-        coeffs = []  
-        c0 = None  # a dummy to eliminate misunderstanding
-        # c1 to c6 are wind turbine coefficients
-        c1 = 0.5176
-        c2 = 116.0
-        c3 = 0.4
-        c4 = 5.0
-        c5 = 21.0
-        c6 = 0.006795
-
-        coeffs.append(c0)
-        coeffs.append(c1)
-        coeffs.append(c2)
-        coeffs.append(c3)
-        coeffs.append(c4)
-        coeffs.append(c5)
-        coeffs.append(c6)
-
-        self.coeffs = self.coeffs + coeffs
-
-    # user definedwind turbine coefficients
-    def c_User(self,u1,u2,u3,u4,u5):
-        coeffs = []  
-        c0 = None  # a dummy to eliminate misunderstanding
-        # c1 to c6 are wind turbine coefficients
-        c1 = u1
-        c2 = u2
-        c3 = u3
-        c4 = u4
-        c5 = u5
-        c6 = u6
-
-        coeffs.append(c0)
-        coeffs.append(c1)
-        coeffs.append(c2)
-        coeffs.append(c3)
-        coeffs.append(c4)
-        coeffs.append(c5)
-        coeffs.append(c6)
-
-        self.coeffs = self.coeffs + coeffs
+    
