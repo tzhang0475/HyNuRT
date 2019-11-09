@@ -3,7 +3,7 @@
 # File              : windData.py
 # Author            : tzhang
 # Date              : 26.10.2019
-# Last Modified Date: 05.11.2019
+# Last Modified Date: 09.11.2019
 # Last Modified By  : tzhang
 
 # module to read or generate Rayleigh Distribution winddata
@@ -12,10 +12,16 @@ import random
 import numpy as np
 import matplotlib.pyplot as plt
 
+class wind_Data:
+    def __init__(self):
+        self.time = []
+        self.wind = []
+        self.energy = []
 
 # generate Rayleigh distribution wind data
-class wind_Rayleigh:
+class wind_Rayleigh(wind_Data):
     def __init__(self,v_max,v_m,n,sTime,eTime,nData):
+        wind_Data.__init__(self)
         self.v_max = v_max # max wind velocity
         self.v_m = v_m # mean wind velocity
         self.n = n # number of intervals
@@ -25,15 +31,13 @@ class wind_Rayleigh:
         eTime = eTime + step
         time = np.arange(sTime,eTime,step)
 
-        self.time = list(time) # time array
-        self.wind = [] # wind velocity array
+        self.time = self.time + list(time) # time array
 
         self.pdf = [] # probability distribution funciton
         self.cdf = [] # cumulated probablity distribution
         self.v_data = [] # velocity distribution
 
 
-        self.windData = [] # time depnent wind data
 
     # Rayleigh probablity distribution function
     def _Rayleigh_(self):
@@ -109,25 +113,27 @@ class wind_Rayleigh:
         self.wind = self.wind + wind
 
     # merge time into one array
-    def _windData_(self):
-        windData = []
-        for i in range(len(self.time)):
-            data = []
-            data.append(self.time[i])
-            data.append(self.wind[i])
-            self.windData.append(data)
-
+#    def _windData_(self):
+#        windData = []
+#        for i in range(len(self.time)):
+#            data = []
+#            data.append(self.time[i])
+#            data.append(self.wind[i])
+#            self.windData.append(data)
+#
     # main function to generate wind data
     def genData(self):
         wind_Rayleigh._Rayleigh_(self)
         wind_Rayleigh._v_dis_(self)
         wind_Rayleigh._cdf_cal_(self)
         wind_Rayleigh._windCurve_(self)
-        wind_Rayleigh._windData_(self)
+#        wind_Rayleigh._windData_(self)
 
-        windData = self.windData
+#        windData = self.windData
+        time = self.time
+        v_wind = self.wind
     
-        return windData
+        return time,v_wind
 
     # plot wind velocity distribution probability
     def plt_v_dis(self):
@@ -163,20 +169,16 @@ class wind_Rayleigh:
 #a test case for wind source class (Rayleigh distribution)
 
 wind = wind_Rayleigh(20,7,20,0,60,60)
-windData = wind.genData()
+time,v_wind = wind.genData()
 wind.plt_v_dis()
 wind.plt_windData()
-print (windData)
+print (time)
+print (v_wind)
 """
 
 
 # class to read wind data
-class wind_readData:
-    def __init__(self):
-        self.time = [] # time array
-        self.wind = [] # wind velocity array
-
-        self.windData = [] # time depnent wind data
+class wind_readData(wind_Data):
 
     def _readFile_(self,inFile):
         time = []
@@ -200,9 +202,9 @@ class wind_readData:
         
         self.time = self.time + time
         self.wind = self.wind + wind
-        self.windData = self.windData + windData
+#        self.windData = self.windData + windData
 
-        return windData
+#        return windData
 
     # plot time dependent wind velocity
     def plt_windData(self): 
