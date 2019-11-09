@@ -3,7 +3,7 @@
 # File              : turbine_data.py
 # Author            : tzhang
 # Date              : 04.11.2019
-# Last Modified Date: 05.11.2019
+# Last Modified Date: 06.11.2019
 # Last Modified By  : tzhang
 
 ############################################################################
@@ -15,14 +15,19 @@
 
 class data_Turbine:
     def __init__(self):
-        coeffs = []  # coefficients to calculate efficiency cp of turbine
-        poly = []    # polinominal coefficients to calculate optimum pitch angle
+        self.coeffs = []  # coefficients to calculate efficiency cp of turbine
+        self.poly = []    # polinominal coefficients to calculate optimum pitch angle
 
 
 # pre-defined wind turbine with Herier (Herier [2009])
 class data_Heier(data_Turbine):
+    # generate data
+    def gen(self):
+        data_Heier.__c_Heier__(self)
+        data_Heier.__p_Heier__(self)
+
     # pre-defined wind turbine coefficients with Herier (Herier [2009])
-    def __c_Herier__(self):
+    def __c_Heier__(self):
         coeffs = []  
         c0 = None  # a dummy to eliminate misunderstanding
         # c1 to c6 are wind turbine coefficients
@@ -44,7 +49,7 @@ class data_Heier(data_Turbine):
         self.coeffs = self.coeffs + coeffs
 
     # pre-defined optimized pitch angle coefficient with Herier (Herier [2009])
-    def __p_Herier__(self):
+    def __p_Heier__(self):
         poly = []  
         p0 = None  # a dummy to eliminate misunderstanding
         # p1 to p4 are polinomial coefficients of beta 
@@ -64,6 +69,11 @@ class data_Heier(data_Turbine):
 
 # pre-defined wind turbine with Thongam el al (Thongam el al [2009])
 class data_Thongam(data_Turbine):
+    # generate data
+    def gen(self):
+        data_Thongam.__c_Thongam__(self)
+        data_Thongam.__p_Thongam__(self)
+
     # pre-defined wind turbine coefficients with Thongam el al (Thongam el al [2009])
     def __c_Thongam__(self):
         coeffs = []  
@@ -107,6 +117,10 @@ class data_Thongam(data_Turbine):
 
 # pre-defined wind turbine by user
 class data_User(data_Turbine):
+    # generate data
+    def gen(self):
+        data_User.__c_User__(self)
+        data_User.__p_User__(self)
 
     def c_User(self,u1,u2,u3,u4,u5):
         coeffs = []  
