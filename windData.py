@@ -3,7 +3,7 @@
 # File              : windData.py
 # Author            : tzhang
 # Date              : 26.10.2019
-# Last Modified Date: 09.11.2019
+# Last Modified Date: 10.11.2019
 # Last Modified By  : tzhang
 
 # module to read or generate Rayleigh Distribution winddata
@@ -219,4 +219,18 @@ class wind_readData(wind_Data):
         plt.show()
         plt.close()
         plt.savefig(pltName,dpi = 100)
+
+# class to calculate total energy in wind pass though wind turbine
+class wind_Energy(wind_Data):
+
+    # wind energy 
+    def P_wind(self, windData, dens_air, d_wing): #  dens_air is the density of air, d_wing is the diameter of the turbine
+        energy = []
+        pi = 3.141592653 # pi constant
+        for i in range(len(self.time)): 
+            Pw = 1./2. * dens_air * pi*d_wing**2/4. * self.wind[i]**3
+            energy.append(Pw)
+
+        self.energy = self.energy + energy
+
 
