@@ -3,7 +3,7 @@
 # File              : wind_turbine.py
 # Author            : tzhang
 # Date              : 28.10.2019
-# Last Modified Date: 10.11.2019
+# Last Modified Date: 13.11.2019
 # Last Modified By  : tzhang
 
 import math
@@ -19,19 +19,57 @@ a module simulate wind turbine
 
 class wind_Turbine:
     # parameters describing a wind turbine
-    def __init__(self,d_wing,J_turbine, cut_in, cut_out):
+    def __init__(self,d_wing,J_turbine,P_lim ,cut_in, cut_out):
         self.d_wing = d_wing   # diameter of the turbine
         self.J_turbine = J_turbine  # moment of inertia of turbine
-        
-        self.cut_in = cut_in       # cut in energy of wind turbine
-        self.cut_out  = cut_out    # cut out energy of the wind turbine, in W (usually the limit is about 2 MW, normaly between 0.5 to 3.6 MW)
-        
-    def P_harvest(self,Pw,cp):        # calculate the harvest wind energy of a wind turbine
+       
+        self.P_lim = P_lim         # power limit of the wind turbine, in W (usually the limit is about 2 MW, normaly between 0.5 to 3.6 MW
+        self.cut_in = cut_in       # cut in velocity of wind turbine
+        self.cut_out  = cut_out    # cut out energy of the wind turbine         
+
+        self.energy = []           # total energy in wind
+        self.p_out = []            # wind turbine output power
+
+    def _P_wind_(self, dens_air, time, v_wind): #  dens_air is the density of air, d_wing is the diameter of the turbine
+        energy = []
+        pi = 3.141592653 # pi constant
+        for i in range(len(time)):
+            Pw = 1./2. * dens_air * pi* self.d_wing**2/4. * v_wind[i]**3
+            energy.append(Pw)
+
+        self.energy = self.energy + energy
+
+        return energy
+
+    def _P_harvest_(self,Pw,cp):        # calculate the harvest wind energy of a wind turbine
+       # print (self.P_lim)
         P = Pw * cp           # harvest power is the product of wind power and wind turbine efficiency 
-        Power = max(0.0,P)         # eleminate negative  power, minimal power to 0
+       # print (P)
+        P = min(self.P_lim,P)
+       # print (P)
 
 #        self.P0 = self.P0 + Power
-        return Power
+        return P
+
+    def P_output(self, dens_air, time, v_wind, cp):
+        energy = wind_Turbine._P_wind_(self,dens_air,time,v_wind)
+
+        power = []
+        for i in range(len(time)):
+            if v_wind[i] <=  self.cut_in:
+                wPower = 0.0
+            elif v_wind[i] >= self.cut_out:
+                wPower = 0.0
+            else:
+              #  print (v_wind[i],cp[i])
+                wPower = wind_Turbine._P_harvest_(self,energy[i],cp[i])
+                wPower = wPower/1E6     # convert to MW
+            power.append(wPower)
+
+        self.p_out = self.p_out + power
+
+        return power
+
 
 class cp_IEC:
     def __init__(self):
@@ -54,18 +92,31 @@ class cp_IEC:
         self.cp = self.cp + cp
 
     # determine the cp value according to wind velocity
-    def cp_value(self,v_wind):
+    def _cp_value_(self,wind_velocity):
         wind = []
         for value in self.wind:
             wind.append(value)
 
         sort = wind
-        sort.append(v_wind)
-        sort.sort()
-        idx = sort.index(v_wind)
-        cp = self.cp[idx-1]
+        if wind_velocity in wind:
+            idx = wind.index(wind_velocity)
+            cp = self.cp[idx]
+        else:
+            sort.append(wind_velocity)
+            sort.sort()
+            idx = sort.index(wind_velocity)
+            cp = self.cp[idx-1]
 
         return cp
+
+    # determine the array of cp
+    def cp_array(self, v_wind):
+        cp_array = []
+        for i in range(len(v_wind)):
+            cp = cp_IEC._cp_value_(self,v_wind[i])
+            cp_array.append(cp)
+
+        return cp_array
 
     def cp_plot(self):
         plt.figure(figsize = (12,8))
@@ -81,13 +132,8 @@ class cp_IEC:
         plt.savefig(pltName,dpi = 100)
 
 
-
-
-
-
 """
 class test 
-"""    
 from windData import wind_Data, wind_Rayleigh
 from material import air
 from turbine_data import data_Turbine, data_Heier
@@ -96,7 +142,7 @@ from sympy import *
 # wind data
 v_max = 20.0
 v_mean = 10.0
-n_range = 20
+n_range = 40
 
 # time data
 sTime = 0.0
@@ -109,74 +155,32 @@ airData.constant()
 d_air = airData.density
 
 # wind turbine data
-d_wing = 90 # in m,  wind turbine diameter
+d_wing = 70 # in m,  wind turbine diameter
 P_lim = 2E6 # in W, power limit of a turbine
 J_turbine = 1.3E7 # in kg.m^2, moment of initia of turbine
 
-beta = 7.87
+cut_in = 4.0
+cut_out = 25.0
+
 
 
 wind = wind_Rayleigh(v_max,v_mean,n_range,sTime,eTime,nData)
-windData = wind.genData()
-
-
-print (windData)
+time,v_wind = wind.genData()
+#print (time)
+#print (v_wind)
 
 cp_curve = cp_IEC()
 cp_curve.curve_A()
+#print (cp_curve.wind)
+#print (cp_curve.cp)
 cp_curve.cp_plot()
+cp_array = cp_curve.cp_array(v_wind)
+#print (cp_array)
 
-cp = cp_curve.cp_value(windData[1][1])
-print (cp)
-
-"""
-windTurbine = wind_Turbine(d_wing,P_lim,J_turbine)
-
-#P_wind = windTurbine.P_wind(windData[1][1],d_air)
-P_wind = windTurbine.P_wind(20.0,d_air)
-
-print ('%.6e'%P_wind)
+w_turbine = wind_Turbine(d_wing,J_turbine,P_lim,cut_in,cut_out)
+wP_out = w_turbine.P_output(d_air, time, v_wind, cp_array)
+print (wP_out)
+"""    
 
 
-turbineData = data_Heier()
-turbineData.gen()
-print (turbineData.coeffs)
 
-#lambda_tsr =windTurbine.tsr_cal(omega,windData[1][1])
-#lambda_1 = windTurbine.lambda_1_cal(beta,lambda_tsr)
-#cp = windTurbine.cp_cal(beta, lambda_1,turbineData.coeffs)
-#cp = 0.59
-#Power = windTurbine.P_harvest(P_wind,cp)
-#print (Power)
-# odes
-omega = der(phi)
-P = tau * omega
-tau = J*der(omega)
-P = P_wind * cp
-
-der(omega) = P_wind * cp/(J*omega)
-
-
-t = [0.0, 0.5, 1.0]
-v_wind = windData[1][1]
-coeffs = turbineData.coeffs
-
-C = P_wind/J_turbine
-
-omega = symbols('omega')
-def eq(omega,t,v_wind,beta,coeffs,C):
-    lambda_tsr =windTurbine.tsr_cal(omega,v_wind)
-    lambda_1 = wind_Turbine.lambda_1_cal(beta,lambda_tsr)
-    cp = windTurbine.cp_cal(beta, lambda_1,coeffs)
-
-    domegadt = C*cp/omega
-
-    return domegadt
-
-eq = eq(omega,t,v_wind,beta,coeffs,C)
-print (eq)
-omega0 = 0.0
-
-omega = integrate.odeint(eq,omega0,t)
- 
-"""
