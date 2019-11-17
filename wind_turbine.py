@@ -19,9 +19,10 @@ a module simulate wind turbine
 
 class wind_Turbine:
     # parameters describing a wind turbine
-    def __init__(self,d_wing,J_turbine,P_lim ,cut_in, cut_out):
+    def __init__(self, d_wing, J_turbine, h_hub, P_lim, cut_in, cut_out):
         self.d_wing = d_wing   # diameter of the turbine
         self.J_turbine = J_turbine  # moment of inertia of turbine
+        self.h_hub = h_hub          # the height of the hub
        
         self.P_lim = P_lim         # power limit of the wind turbine, in W (usually the limit is about 2 MW, normaly between 0.5 to 3.6 MW
         self.cut_in = cut_in       # cut in velocity of wind turbine
@@ -156,8 +157,9 @@ d_air = airData.density
 
 # wind turbine data
 d_wing = 70 # in m,  wind turbine diameter
-P_lim = 2E6 # in W, power limit of a turbine
 J_turbine = 1.3E7 # in kg.m^2, moment of initia of turbine
+h_hub = 50 # in m, the height of the hub
+P_lim = 2E6 # in W, power limit of a turbine
 
 cut_in = 4.0
 cut_out = 25.0
@@ -177,7 +179,7 @@ cp_curve.cp_plot()
 cp_array = cp_curve.cp_array(v_wind)
 #print (cp_array)
 
-w_turbine = wind_Turbine(d_wing,J_turbine,P_lim,cut_in,cut_out)
+w_turbine = wind_Turbine(d_wing,J_turbine,h_hub,P_lim,cut_in,cut_out)
 wP_out = w_turbine.P_output(d_air, time, v_wind, cp_array)
 print (wP_out)
 """    
