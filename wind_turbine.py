@@ -3,7 +3,7 @@
 # File              : wind_turbine.py
 # Author            : tzhang
 # Date              : 28.10.2019
-# Last Modified Date: 13.11.2019
+# Last Modified Date: 18.11.2019
 # Last Modified By  : tzhang
 
 import math
@@ -185,4 +185,16 @@ print (wP_out)
 """    
 
 
+"""
 
+a module simulate wind farm                                 
+
+"""
+class wind_farm:
+    def __init__(self,n_unit):
+        self.n_unit = n_unit
+
+    def p_out(self,p_unit):
+        P_output = self.n_unit*p_unit
+
+        return P_output
