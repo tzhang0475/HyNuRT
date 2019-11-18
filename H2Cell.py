@@ -3,7 +3,7 @@
 # File              : H2Cell.py
 # Author            : tzhang
 # Date              : 13.11.2019
-# Last Modified Date: 17.11.2019
+# Last Modified Date: 18.11.2019
 # Last Modified By  : tzhang
 
 import numpy as np
@@ -208,7 +208,7 @@ i0_an = 1e-7   # in A/cm^2
 
 iter_max = 5000 # maximum number of iterations
 
-P = 1e6         # in W, the input power of the pem
+P = 0         # in W, the input power of the pem
 
 pem = h2_module(theta_m,A,alpha_an,alpha_cat,i0_an,i0_cat,T,P_h2,P_o2,P_h2o,iter_max)
 n_rate = pem.cal(P)
@@ -223,8 +223,10 @@ a model for hydrogen cluster
 
 """
 class h2_cluster:
-    def __init__(self, n_unit):
+    def __init__(self, n_unit,Pmax_unit,Pmin_unit):
         self.n_unit = n_unit # number of units 
+        self.Pmax_unit = Pmax_unit  # maximum capacity of a module
+        self.Pmin_unit = Pmin_unit  # minimum capacity od a module
 
     # calculate the total hydrogen prodcuction rate
     def h2_total_rate(self,n_rate):
@@ -238,10 +240,38 @@ class h2_cluster:
 
         return n_tot
 
-    # calculate the 
+    # calculate the input power to each unit 
     def p_unit(self,P):
-        p_unit = P/self.n_unit
+        P = P/self.n_unit
+        P_unit = min(self.Pmax_unit,P)
 
-        return P_unit
+        if P_unit < P:
+            P_residual = P - self.Pmax_unit
+
+        elif P_unit < Pmin_unit:
+            print ('***************** WARNING !!*****************')
+            print ('  input power too low, pem not functioning   ')
+            print ('*********************************************')
+
+            P_unit = 0
+            P_residual = P
+        else:
+            P_residual = 0
 
 
+        return P_unit, P_residual
+
+    # calculate the total resiudal power 
+    def p_res_tot(self,P_residual):
+
+        P_res_tot = P_residual*self.n
+
+        return P_res_tot
+
+
+    # calculate the total residual energy
+    def e_res_tot(P_res_tot,t):
+        
+        E_res_tot = P_res_tot*t
+
+        return E_res_tot
