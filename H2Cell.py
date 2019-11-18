@@ -6,10 +6,17 @@
 # Last Modified Date: 18.11.2019
 # Last Modified By  : tzhang
 
+"""
+REFERENCES:
+   - Marangio, F, Santarelli, M, and Cali, M. Theoretical model and experimental analysis of a high pressure PEM water electrolyser for hydrogen production. United Kingdom: N. p., 2009. Web. doi:10.1016/J.IJHYDENE.2008.11.083.
+   - Alhassan Salami Tijani, M.F. Abdul Ghani, A.H. Abdol Rahim, Ibrahim Kolawole Muritala, Fatin Athirah Binti Mazlan, Electrochemical characteristics of (PEM) electrolyzer under influence of charge transfer coefficient,International Journal of Hydrogen Energy,Volume 44, Issue 50,2019,Pages 27177-27189,ISSN 0360-3199, doi:10.1016/j.ijhydene.2019.08.188.   
+   -A. Awasthi, Keith Scott, S. Basu,Dynamic modeling and simulation of a proton exchange membrane electrolyzer for hydrogen production,International Journal of Hydrogen Energy,Volume 36, Issue 22,2011,Pages 14779-14786,ISSN 0360-3199,doi:10.1016/j.ijhydene.2011.03.045.
+   -Gregor Taljan, Michael Fowler, Claudio Cañizares, Gregor Verbič,Hydrogen storage for mixed wind–nuclear power plants in the context of a Hydrogen Economy,International Journal of Hydrogen Energy,Volume 33, Issue 17,2008,Pages 4463-4475,ISSN 0360-3199,doi:10.1016/j.ijhydene.2008.06.040.
+"""
+
 import numpy as np
 import math
 from sympy import *
-#from mpmath import *
 """
 
 a model to decribe hydrogen production
