@@ -12,6 +12,13 @@ import turbine_data
 from matplotlib import pyplot as plt
 
 """
+REFERENCES:
+    - Heier, Siegfried, and Rachel Waddington. Grid Integration of Wind Energy Conversion Systems. Chichester, England: Wiley, 2014. Print.
+    - Eberhart, Philip & Chung, Tek & Haumer, Anton & Kral, Christian. (2015). Open Source Library for the Simulation ofWind Power Plants. 929-936. 10.3384/ecp15118929. 
+    - International Standard, IEC 61400-12-1:2017 Wind energy generation systems - Part 12-1: Power performance measurements of electricity producing wind turbines
+"""
+
+"""
 
 a module simulate wind turbine                                           
 
