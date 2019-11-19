@@ -3,7 +3,7 @@
 # File              : wind_turbine.py
 # Author            : tzhang
 # Date              : 28.10.2019
-# Last Modified Date: 18.11.2019
+# Last Modified Date: 19.11.2019
 # Last Modified By  : tzhang
 
 import math
@@ -38,6 +38,7 @@ class wind_Turbine:
         self.energy = []           # total energy in wind
         self.p_out = []            # wind turbine output power
 
+    # calculate energy in wind
     def _P_wind_(self, dens_air, time, v_wind): #  dens_air is the density of air, d_wing is the diameter of the turbine
         energy = []
         pi = 3.141592653 # pi constant
@@ -49,6 +50,7 @@ class wind_Turbine:
 
         return energy
 
+    # calculate theoretical wind turbine output power
     def _P_harvest_(self,Pw,cp):        # calculate the harvest wind energy of a wind turbine
        # print (self.P_lim)
         P = Pw * cp           # harvest power is the product of wind power and wind turbine efficiency 
@@ -59,6 +61,7 @@ class wind_Turbine:
 #        self.P0 = self.P0 + Power
         return P
 
+    # calculate wind turbine output power
     def P_output(self, dens_air, time, v_wind, cp):
         energy = wind_Turbine._P_wind_(self,dens_air,time,v_wind)
 
