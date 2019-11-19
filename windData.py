@@ -3,7 +3,7 @@
 # File              : windData.py
 # Author            : tzhang
 # Date              : 26.10.2019
-# Last Modified Date: 13.11.2019
+# Last Modified Date: 19.11.2019
 # Last Modified By  : tzhang
 
 # module to read or generate Rayleigh Distribution winddata
@@ -19,16 +19,18 @@ class wind_Data:
 
 # generate Rayleigh distribution wind data
 class wind_Rayleigh(wind_Data):
-    def __init__(self,v_max,v_m,n,sTime,eTime,nData):
+    def __init__(self,v_max,v_m,n,time=[],sTime=None,eTime=None,nData=None):
         wind_Data.__init__(self)
         self.v_max = v_max # max wind velocity
         self.v_m = v_m # mean wind velocity
         self.n = n # number of intervals
-        
-        # generate the time array for wind data
-        step = (eTime - sTime)/nData
-        eTime = eTime + step
-        time = np.arange(sTime,eTime,step)
+      
+        if len(time)==0:
+            # generate the time array for wind data
+            step = (eTime - sTime)/nData
+            eTime_new = eTime + step
+            time = np.arange(sTime,eTime_new,step)
+            print (time)
 
         self.time = self.time + list(time) # time array
 
@@ -112,15 +114,6 @@ class wind_Rayleigh(wind_Data):
 
         self.wind = self.wind + wind
 
-    # merge time into one array
-#    def _windData_(self):
-#        windData = []
-#        for i in range(len(self.time)):
-#            data = []
-#            data.append(self.time[i])
-#            data.append(self.wind[i])
-#            self.windData.append(data)
-#
     # main function to generate wind data
     def genData(self):
         wind_Rayleigh._Rayleigh_(self)
@@ -167,15 +160,27 @@ class wind_Rayleigh(wind_Data):
 
 """ 
 #a test case for wind source class (Rayleigh distribution)
+sTime = 0
+eTime = 60
+nData = 60
+step = (eTime - sTime)/nData
+eTime_new = eTime + step
+time = np.arange(sTime,eTime_new,step)
+print (time)
+time = []
 
-wind = wind_Rayleigh(20,7,20,0,60,60)
+v_max = 20
+v_mean = 7
+n = 20
+
+wind = wind_Rayleigh(v_max,v_mean,n,time,sTime,eTime,nData)
 time,v_wind = wind.genData()
 wind.plt_v_dis()
 wind.plt_windData()
-print (time)
+print ('time is', time)
 print (v_wind)
-"""
 
+"""
 
 # class to read wind data
 class wind_readData(wind_Data):

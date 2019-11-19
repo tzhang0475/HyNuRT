@@ -82,6 +82,7 @@ class wind_Turbine:
         return power
 
 
+
 class cp_IEC:
     def __init__(self):
         self.wind = []
@@ -144,7 +145,8 @@ class cp_IEC:
 
 
 """
-class test 
+class test
+
 from windData import wind_Data, wind_Rayleigh
 from material import air
 from turbine_data import data_Turbine, data_Heier
@@ -156,9 +158,10 @@ v_mean = 10.0
 n_range = 40
 
 # time data
+time = []
 sTime = 0.0
-eTime = 20.0
-nData = 20
+eTime = 60.0
+nData = 60
 
 # air property
 airData = air()
@@ -176,7 +179,7 @@ cut_out = 25.0
 
 
 
-wind = wind_Rayleigh(v_max,v_mean,n_range,sTime,eTime,nData)
+wind = wind_Rayleigh(v_max,v_mean,n_range,time,sTime,eTime,nData)
 time,v_wind = wind.genData()
 #print (time)
 #print (v_wind)
@@ -192,8 +195,8 @@ cp_array = cp_curve.cp_array(v_wind)
 w_turbine = wind_Turbine(d_wing,J_turbine,h_hub,P_lim,cut_in,cut_out)
 wP_out = w_turbine.P_output(d_air, time, v_wind, cp_array)
 print (wP_out)
-"""    
 
+"""    
 
 """
 
@@ -204,7 +207,45 @@ class wind_farm:
     def __init__(self,n_unit):
         self.n_unit = n_unit
 
-    def p_out(self,p_unit):
+    # total output of wind farm 
+    def _p_out_(self,p_unit):
         P_output = self.n_unit*p_unit
 
         return P_output
+
+    # calculate the power array
+    def pArray(self,p_unit_array):
+        p_farm_array = []
+        for p_unit in p_unit_array:
+            p_farm = wind_farm._p_out_(self,p_unit)
+            p_farm_array.append(p_farm)
+
+        return p_farm_array
+
+
+    # plot wind farm output power
+    def wPower_plot(self,time,p_farm_array):
+        plt.figure(figsize = (12,8))
+        plt.plot(time,p_farm_array, color = 'r',linestyle = '-',marker = '^',markersize = '5')
+        plt.xlabel('time (s)',fontsize = '16')
+        plt.xlim(left = 0.0)
+        plt.ylabel('Wind Farm Power Output (MW)', fontsize = '16')
+        plt.grid(linestyle='--',linewidth = '1')
+
+        pltName = 'wind_farm_output.png'
+#        plt.show()
+#        plt.close()
+        plt.savefig(pltName,dpi = 100)
+
+
+"""
+class test
+
+n_unit = 10
+
+w_farm = wind_farm(n_unit)
+wP_farm_out = w_farm.pArray(wP_out)
+print (wP_farm_out)
+
+w_farm.wPower_plot(time,wP_farm_out)
+"""    
