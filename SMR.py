@@ -8,7 +8,7 @@
 
 """
 
-a simple SMR model
+a simple SMR model: working as base load
 
 """
 
