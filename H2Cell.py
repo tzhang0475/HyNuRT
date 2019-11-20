@@ -3,7 +3,7 @@
 # File              : H2Cell.py
 # Author            : tzhang
 # Date              : 13.11.2019
-# Last Modified Date: 18.11.2019
+# Last Modified Date: 20.11.2019
 # Last Modified By  : tzhang
 
 """
@@ -282,3 +282,44 @@ class h2_cluster:
         E_res_tot = P_res_tot*t
 
         return E_res_tot
+
+"""
+
+a simple model for hydrogen storage 
+
+"""
+
+class h2_storage:
+    def __init__(self,n_store = 0):
+        self.n_store = n_store  # stored hydrogen, in mol
+
+        self.v_store = 0
+        self.m_store = 0
+
+    def update(self):
+        h2_storage._store_update_(self,n_tot)
+        h2_storage._mol_vol_converter_(self)
+        h2_storage._mol_mass_converter_(self)
+
+    # return current molar storage
+    def aquire_n(self):
+        return self.n_store
+
+    # return current mass storage
+    def aquire_m(self):
+        return self.m_store
+
+    # update stored hydrogen
+    def _store_update_(self,n_tot):
+        self.n_store = self.n_store + n_tot
+
+    # calculate hydrogen in mol to hydrogen in volume standard state
+    def _mol_vol_converter_(self):
+        v_f = 22.4          # volume per mole in standard condition
+        self.v_store = self.n_store * v_f
+
+    # calculate hydrogen in mol to hydrogen in mass, in kg
+    def _mol_mass_converter_(self):
+        m_f = 2e-3             # in kg/mol
+        self.m_store = self.n_store * m_f
+
