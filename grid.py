@@ -3,11 +3,12 @@
 # File              : grid.py
 # Author            : tzhang
 # Date              : 18.11.2019
-# Last Modified Date: 19.11.2019
+# Last Modified Date: 21.11.2019
 # Last Modified By  : tzhang
 import csv
 from datetime import datetime as dtCal
 import numpy as np
+from matplotlib import pyplot as plt
 """
 
 a module to read grid demand data (in csv format)
@@ -87,7 +88,6 @@ class grid:
         return demand
 
 
-
     # generate grid data
     def gen(self):
         if self.dataMode == 0:
@@ -103,6 +103,43 @@ class grid:
         self.time = self.time + time
         self.demand = self.demand + demand
 
+    # plot grid demand data
+    def demand_plot(self):
+        plt.figure(figsize = (12,8))
+        plt.plot(self.time,self.demand, color = 'g')
+        plt.xlabel('Time (min)',fontsize = '16')
+        plt.xlim(left = 0.0)
+        plt.ylabel('Grid Demand (MW)', fontsize = '16')
+        plt.grid(linestyle='--',linewidth = '1')
+
+        pltName = 'grid_demand.png'
+#        plt.show()
+#        plt.close()
+        plt.savefig(pltName,dpi = 100)
+
+    # aquire time data
+    def aquire_time(self):
+        return self.time
+
+    # aquire demand data
+    def aquire_demand(self):
+        return self.demand
+
+    # plot user defined grid demand data
+    def user_demand_plot(self,time,demand):
+        plt.figure(figsize = (12,8))
+        plt.plot(time,demand, color = 'g')
+        plt.xlabel('Time (min)',fontsize = '16')
+        plt.xlim(left = 0.0)
+        plt.ylabel('Grid Demand (MW)', fontsize = '16')
+        plt.grid(linestyle='--',linewidth = '1')
+
+        pltName = 'user_grid_demand.png'
+#        plt.show()
+#        plt.close()
+        plt.savefig(pltName,dpi = 100)
+
+
 
 """
 a class test
@@ -115,6 +152,7 @@ multiplier = 0.005
 
 uk_grid = grid(dataMode,inFile,multiplier)
 uk_grid.gen()
+uk_grid.demand_plot()
 
 print (uk_grid.date)
 print (uk_grid.time)

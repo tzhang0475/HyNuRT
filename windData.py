@@ -3,7 +3,7 @@
 # File              : windData.py
 # Author            : tzhang
 # Date              : 26.10.2019
-# Last Modified Date: 19.11.2019
+# Last Modified Date: 21.11.2019
 # Last Modified By  : tzhang
 
 # module to read or generate Rayleigh Distribution winddata
@@ -133,33 +133,34 @@ class wind_Rayleigh(wind_Data):
         v_data = self.v_data[1:]
         plt.figure(figsize = (12,8))
         plt.bar(v_data,self.pdf, color = 'c')
-        plt.xlabel('wind velocity (m/s)',fontsize = '16')
+        plt.xlabel('Wind Velocity (m/s)',fontsize = '16')
         plt.xlim(left = 0.0)
         step = 0.0+max(self.v_data)/self.n
         plt.xticks(np.arange(0.0,(max(self.v_data)+step),step))
-        plt.ylabel('probability', fontsize = '16')
+        plt.ylabel('Probability', fontsize = '16')
         plt.grid(linestyle='--',linewidth = '1')
 
         pltName = 'wind_v_Rayleigh.png'
-        plt.show()
-        plt.close()
+#        plt.show()
+#        plt.close()
         plt.savefig(pltName,dpi = 100)
 
     def plt_windData(self): 
         plt.figure(figsize = (12,8))
         plt.plot(self.time,self.wind, color = 'r')
-        plt.xlabel('time',fontsize = '16')
+        plt.xlabel('Time (min)',fontsize = '16')
         plt.xlim(left = 0.0)
-        plt.ylabel('wind velocity (m/s)', fontsize = '16')
+        plt.ylabel('Wind Velocity (m/s)', fontsize = '16')
         plt.grid(linestyle='--',linewidth = '1')
 
         pltName = 'windData_Rayleigh.png'
-        plt.show()
-        plt.close()
+#        plt.show()
+#        plt.close()
         plt.savefig(pltName,dpi = 100)
 
 """ 
 #a test case for wind source class (Rayleigh distribution)
+
 sTime = 0
 eTime = 60
 nData = 60

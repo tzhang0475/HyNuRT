@@ -3,7 +3,7 @@
 # File              : wind_turbine.py
 # Author            : tzhang
 # Date              : 28.10.2019
-# Last Modified Date: 19.11.2019
+# Last Modified Date: 21.11.2019
 # Last Modified By  : tzhang
 
 import math
@@ -226,8 +226,8 @@ class wind_farm:
     # plot wind farm output power
     def wPower_plot(self,time,p_farm_array):
         plt.figure(figsize = (12,8))
-        plt.plot(time,p_farm_array, color = 'r',linestyle = '-',marker = '^',markersize = '5')
-        plt.xlabel('time (s)',fontsize = '16')
+        plt.plot(time,p_farm_array, color = 'darkorange',linestyle = '-',marker = '^',markersize = '5')
+        plt.xlabel('Time (min)',fontsize = '16')
         plt.xlim(left = 0.0)
         plt.ylabel('Wind Farm Power Output (MW)', fontsize = '16')
         plt.grid(linestyle='--',linewidth = '1')

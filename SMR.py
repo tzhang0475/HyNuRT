@@ -35,7 +35,7 @@ class SMR_NPP:
 
 """
 a test class
-"""
+
 P_nominal = 50 # nominal power, in MW
 LF_lim = 0.05
 
@@ -49,3 +49,4 @@ n_power = npp.npp_power(p_unit)
 
 print (p_unit)
 print (n_power)
+"""
