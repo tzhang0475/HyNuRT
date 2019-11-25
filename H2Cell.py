@@ -559,7 +559,7 @@ class h2_system(h2_module,h2_cluster,h2_storage):
             P_consumption = 0.0
 
             # power produced by hydrogen fuel cell or need to be produced
-            P_production = P_curr
+            P_production = abs(P_curr)  # as P_curr is a nagative value as input
            
             
             # check whether the storage of hydrogen is sufficient
@@ -568,7 +568,7 @@ class h2_system(h2_module,h2_cluster,h2_storage):
             # if not sufficient, consume all the hydrogen in the storage
             if n_consume > 0:
                 P_production = h2_system.consume_all(self,n_consume,dt)
-
+        
         # update total stored hydrogen data
         h2_system.h2_stored(self)
 
