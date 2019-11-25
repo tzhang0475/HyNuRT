@@ -3,7 +3,7 @@
 # File              : sys_control.py
 # Author            : tzhang
 # Date              : 24.11.2019
-# Last Modified Date: 24.11.2019
+# Last Modified Date: 25.11.2019
 # Last Modified By  : tzhang
 
 """
@@ -21,11 +21,10 @@ class balancing:
 
         balancing._dP_cal_(self,P_coupled,P_demand)
 
-        print ('dP ',self.dP)
 
         for i in range(len(self.dP)):
             if self.dP[i] >= Pmin_cluster:
-                P_to_h2sys = balancing._full_electrolysis_(self,i,Pmin_cluster)
+                P_to_h2sys = balancing._full_electrolysis_(self,i)
             elif self.dP[i] >= 0 and self.dP[i] < Pmin_cluster:
                 P_to_h2sys = balancing._partial_electrolysis_(self,i)
             else:
@@ -40,11 +39,12 @@ class balancing:
     def _dP_cal_(self,P_coupled,P_demand):
         dP = P_coupled - P_demand
         dP = list(dP)
-        self.dP = self.dP + dP
+        print (dP)
+        self.dP = dP
 
     # calculate the power to hydrogen system if residual power is larger than the minimum opearion demand
-    def _full_electrolysis_(self,i,Pmin_cluster):
-        P_nure_to_h2sys = self.dP[i] + Pmin_cluster
+    def _full_electrolysis_(self,i):
+        P_nure_to_h2sys = self.dP[i]
 
         return P_nure_to_h2sys
 
@@ -60,3 +60,8 @@ class balancing:
         return P_nure_to_h2sys
 
 
+    # calculate the power to the grid
+    def cal_to_grid(self,P_coupled,P_h2_produced,P_h2_consumed):
+        P_to_grid = P_coupled + P_h2_produced - P_h2_consumed
+
+        return P_to_grid
