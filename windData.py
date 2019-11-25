@@ -3,7 +3,7 @@
 # File              : windData.py
 # Author            : tzhang
 # Date              : 26.10.2019
-# Last Modified Date: 21.11.2019
+# Last Modified Date: 25.11.2019
 # Last Modified By  : tzhang
 
 # module to read or generate Rayleigh Distribution winddata

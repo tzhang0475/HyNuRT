@@ -3,7 +3,7 @@
 # File              : H2Cell.py
 # Author            : tzhang
 # Date              : 13.11.2019
-# Last Modified Date: 24.11.2019
+# Last Modified Date: 25.11.2019
 # Last Modified By  : tzhang
 
 """
@@ -219,25 +219,13 @@ class h2_module:
 
         return sigma_m
         
-    # calculate the 
+    # calculate the open circuit voltage 
     def V_oc(E_oc,eta_act,eta_ohm):
         V_oc = E_oc + eta_act + eta_ohm
 
         return V_oc
         
-    def I_eq(self,V_oc):
-        E_expr = V_oc*self.I_sbl
 
-        return E_expr
-
-    def eq_solver(E_expr,E,E_oc,eta_ohm):
-        v_ini = E_oc + eta_ohm
-        I_ini = E/v_ini
-
-        E_expr_new = E_expr.subs(I,I_ini)
-        print (E_expr_new)
-        
-#        print (I)
 
 """
 class test
@@ -276,7 +264,8 @@ class h2_cluster:
         self.n_unit = n_unit # number of units 
         self.Pmax_unit = Pmax_unit  # maximum capacity of a module
         self.Pmin_unit = Pmin_unit  # minimum capacity od a module
-        self.state = True   # default state of the cluster, true for production, false for consumption
+        self.working_state = True   # default state of the cluster, true for production, false for consumption
+        self.operation_state = True  # default state of production, true for full operation,false for partial operation
 
     # calculate the minimum energy to maintain the h2 cluster operation
     def P_min_operation(self):
@@ -285,8 +274,8 @@ class h2_cluster:
         return Pmin_cluster
 
     # calculate the total hydrogen prodcuction rate
-    def h2_total_rate(self,n_rate):
-        n_rate_tot = n_rate * self.n_unit
+    def h2_total_rate(self,n_rate,n_operate):
+        n_rate_tot = n_rate * n_operate
 
         return n_rate_tot
     
@@ -308,33 +297,54 @@ class h2_cluster:
 
         return n_unit_consume_rate
 
-    # calculate the input power to each unit 
+    # calculate the number of working modules in partial electrolysis mode
+    def n_unit_operation(self,P):
+        n_operate = int(P/self.Pmin_unit)
+        print ('calculate result ', n_operate)
+        P_residual = P - (self.Pmin_unit*n_operate)
+
+        return n_operate, P_residual
+
+    # calculate the input power to each unit at full operation and consumption 
     def p_unit_cal(self,P):
-        P = P/self.n_unit
-        P_unit = min(self.Pmax_unit,P)
+        P_unit = P/self.n_unit
+        #P_unit = min(self.Pmax_unit,P_unit)
 
         if P_unit <= self.Pmax_unit and P_unit >= self.Pmin_unit:
-            self.state = True   # change the state to production
+            self.working_state = True      # change the state to production
+            self.operation_state = True    # operation state change to full operation
+
             P_residual = 0.0
+            n_operate = self.n_unit
 
         elif P_unit > self.Pmax_unit:
-            self.state = True    # production with maximum power
-            P_residual = P - self.Pmax_unit
+            self.working_state = True    # production with maximum power
+            self.operation_state = True    # operation state change to full operation
+
+            n_operate = self.n_unit
+            P_residual = P - self.Pmax_unit*n_operate
 
         elif P_unit < self.Pmin_unit and P_unit >= 0:
-            print ('***************** WARNING !!*****************')
-            print ('  input power too low, pem not functioning   ')
-            print ('*********************************************')
-            self.state = True   # change the state to production, but no real production 
+            print ('********************* WARNING !!*******************')
+            print ('  input power too low, pem partially functioning   ')
+            print ('***************************************************')
+            self.working_state = True   # change the state to production, but no real production 
+            self.operation_state = False    # operation state change to full operation
 
-            P_unit = 0
-            P_residual = P
+            n_operate,P_residual = h2_cluster.n_unit_operation(self,P) 
+            P_unit = self.Pmin_unit
+
+            print ('partial operation: ', n_operate)
+
         else:
-            self.state = False   # change the state to consumption
+            self.working_state = False   # change the state to consumption
+            self.operation_state = True    # operation state change to full operation
+
             P_unit = abs(P_unit)
             P_residual = 0
+            n_operate = self.n_unit
 
-        return P_unit, P_residual
+        return P_unit, P_residual,n_operate
 
     # calculate the total resiudal power 
     def p_res_tot(self,P_residual):
@@ -492,6 +502,8 @@ class h2_system(h2_module,h2_cluster,h2_storage):
 
         h2_storage.__init__(self,n_store)
 
+        self.m_stored_data = [m_store]   # array of total stored hydrogen, in kg
+
     # calculate the power and hydrogen change 
     def cal(self,P_input,time):
         P_pro = []
@@ -502,11 +514,11 @@ class h2_system(h2_module,h2_cluster,h2_storage):
         time = np.asarray(time,dtype = 'float')
         time = time * 60    
         time = list(time)
-        print ('convert time',time)
+#        print ('convert time',time)
 
         for i in range(len(P_input)):
-            print ('\n')
-            print ('oh lala')
+        #    print ('\n')
+        #    print ('a new time step')
             
             if i != (len(time)-1):
                 dt = time[i+1] - time[i]
@@ -524,14 +536,14 @@ class h2_system(h2_module,h2_cluster,h2_storage):
    
     # calculate the power and hydrogen change in current time step
     def cal_curr(self,P_curr,dt):
-        P_unit,P_residual = h2_cluster.p_unit_cal(self,P_curr)
+        P_unit,P_residual,n_operate = h2_cluster.p_unit_cal(self,P_curr)
         
-        print ('power to unit ',P_unit)
-        print ('residual power ',P_residual)
+#        print ('power to unit ',P_unit)
+#        print ('residual power ',P_residual)
         
         # calculate the hydrogen production in current time step
-        if self.state:        
-            h2_system.production_process(self,P_unit,dt)
+        if self.working_state:        
+            h2_system.production_process(self,P_unit,n_operate,dt)
 
             # power consumed to generate hydrogen
             P_consumption = P_curr
@@ -541,7 +553,7 @@ class h2_system(h2_module,h2_cluster,h2_storage):
 
         # calculate the hydrogen consumption in current time step
         else:                       
-            h2_system.consumption_process(self,P_unit,dt)
+            h2_system.consumption_process(self,P_unit,n_operate,dt)
 
             # power consumed to generate hydrogen
             P_consumption = 0.0
@@ -557,51 +569,64 @@ class h2_system(h2_module,h2_cluster,h2_storage):
             if n_consume > 0:
                 P_production = h2_system.consume_all(self,n_consume,dt)
 
+        # update total stored hydrogen data
+        h2_system.h2_stored(self)
+
         return P_production, P_consumption, P_residual
  
     # calculate the hydrogen production 
-    def production_process(self,P_unit,dt):
+    def production_process(self,P_unit,n_operate,dt):
         n_rate = h2_module.cal(self,P_unit)
-        print ('production rate',n_rate)
+#        print ('production rate',n_rate)
     
-        n_rate_tot = h2_cluster.h2_total_rate(self,n_rate)
-        print (n_rate_tot)
+        n_rate_tot = h2_cluster.h2_total_rate(self,n_rate,n_operate)
+#        print ('cluster hydrogen generate rate ', n_rate_tot)
         
         n_tot = h2_cluster.h2_calculation(self,n_rate_tot,dt)
         
-        print (n_tot)
+#        print ('total generated hydrogen (in mol) ',n_tot)
         
         h2_storage.update(self,n_tot)
      
     # calculate the hydrogen consumption 
-    def consumption_process(self,P_unit,dt):
+    def consumption_process(self,P_unit,n_operate,dt):
         n_rate = h2_module.cal(self,P_unit)
         # convert to consume rate
         n_rate = -n_rate
         
-        n_rate_tot = h2_cluster.h2_total_rate(self,n_rate)
-        print (n_rate_tot)
+        n_rate_tot = h2_cluster.h2_total_rate(self,n_rate,n_operate)
+#       print ('cluster hydrogen comsuption rate ', n_rate_tot)
         
         n_tot = h2_cluster.h2_calculation(self,n_rate_tot,dt)
         
-        print (n_tot)
+#        print ('total consumed hydrogen (in mol) ', n_tot)
         
         h2_storage.update(self,n_tot)
 
     # calculate the power generation by consume all the hydrogen in the storage
     def consume_all(self,n_consume,dt):
-        print ('hydrogen fuel cell')
+#        print ('hydrogen fuel cell')
         n_tot_consume_rate = h2_cluster.h2_consumed_rate(self,n_consume,dt)
         n_unit_consume_rate = h2_cluster.h2_unit_consume_rate(self,n_tot_consume_rate)
         p_unit = h2_module.cal_consume_all(self,n_unit_consume_rate)
         P_h2_gen = h2_cluster.P_produced(self,p_unit)
-        print ('power produced',P_h2)
+#        print ('power produced',P_h2)
 
         return P_h2_gen
 
     # return current mass storage
     def aquire_m(self):
         return self.m_store
+
+    # return history of hydrogen mass storage data
+    def aquire_m_records(self):
+        return self.m_stored_data
+
+    # record stored hydrogen data
+    def h2_stored(self):
+        m_store = h2_system.aquire_m(self)
+        self.m_stored_data.append(m_store)
+        
 
     # sysem minimum production power demand
     def Pmin_system(self):
@@ -635,7 +660,7 @@ Pmin_unit = 0.05    # minimum power of a cell
 
 m_store = 0          # initial storage, in kg
 
-P_input = [50,-60,20,30,50,40,70] # 30 MW residual power from grid
+P_input = [50,-60,10,30,50,40,70] # 30 MW residual power from grid
 time = [0,300,600,900,1200,1500,1800]     # in s
 
 h2_sys = h2_system(theta_m,A,alpha_an,alpha_cat,i0_an,i0_cat,T,P_h2,P_o2,P_h2o,iter_max,\
