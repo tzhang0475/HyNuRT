@@ -3,10 +3,11 @@
 # File              : prepost_process.py
 # Author            : tzhang
 # Date              : 25.11.2019
-# Last Modified Date: 25.11.2019
+# Last Modified Date: 04.12.2019
 # Last Modified By  : tzhang
 
 from matplotlib import pyplot as plt
+import numpy as np
 
 """
 
@@ -63,6 +64,21 @@ class post_process:
         plt.grid(linestyle='--',linewidth = '1')
 
         pltName = 'power_abondoned.png'
+        plt.savefig(pltName,dpi = 100)
+
+    # plot cash flow of n years
+    def plt_cashflow(n_year,cashflow):
+        
+        year = np.arange(0,n_year,1) 
+
+        plt.figure(figsize = (14,8))
+        plt.plot(year,cashflow, color = 'firebrick',linewidth = '3',marker = 'o', markersize = '5')
+        plt.xlabel('year',fontsize = '16')
+        plt.xlim(left = 0.0)
+        plt.ylabel('Cash Flow ($ in Million)', fontsize = '16')
+        plt.grid(linestyle='--',linewidth = '1')
+
+        pltName = 'cashflow.png'
         plt.savefig(pltName,dpi = 100)
 
 
