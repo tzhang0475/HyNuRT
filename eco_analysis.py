@@ -3,12 +3,13 @@
 # File              : eco_analysis.py
 # Author            : tzhang
 # Date              : 26.11.2019
-# Last Modified Date: 02.12.2019
+# Last Modified Date: 04.12.2019
 # Last Modified By  : tzhang
 
 import sys
 import numpy as np
 import math
+
 
 # use a tool to calculation inflation, written by 'Los Angeles Times Data and Graphics Department', the project is on GitHub, details see: https://github.com/datadesk/cpi
 # but this module is quite slow
@@ -20,7 +21,7 @@ import cpi
 economical analysis of the system
 
 """
-
+from prepost_process import *
 
 
 
@@ -33,13 +34,17 @@ REFERENCES:
     - Geoffrey A. Black, Fatih Aydogan, Cassandra L. Koerner,Economic viability of light water small modular nuclear reactors: General methodology and vendor data,Renewable and Sustainable Energy Reviews,Volume 103,2019,Pages 248-258,ISSN 1364-0321, doi:10.1016/j.rser.2018.12.041.
     - NEA/OEC, Current Status, Technical Feasibility and Economics of Small Nuclear Reactors, NEA/OECD, 2011.
     - Boldon, Lauren M., and Sabharwall, Piyush. Small modular reactor: First-of-a-Kind (FOAK) and Nth-of-a-Kind (NOAK) Economic Analysis. United States: N. p., 2014. Web. doi:10.2172/1167545
-
+    - Locatelli, G , Pecoraro, M, Meroni, G et al. (1 more author) (2017) Appraisal of small modular nuclear reactors with ‘real options’ valuation. Proceedings of the Institution of Civil Engineers - Energy, 170 (2). 1600004. pp. 51-66. ISSN 1751-4223
+    - Piyush Sabharwall, Shannon Bragg-Sitton, Lauren Boldon, Seth Blumsack, Nuclear Renewable Energy Integration: An Economic Case Study, The Electricity Journal, Volume 28, Issue 8, 2015, Pages 85-95, ISSN 1040-6190, doi:10.1016/j.tej.2015.09.003.
 """
+
 class SMR_eco:
+
     def __init__(self,P_unit,n_unit,year,lifetime,FOAK = True):
         self.P_unit = P_unit        # power of one SMR module
         self.n_unit = n_unit        # number of units in one nuclear power plant
         self.year = year            # use currency in which year
+        self.lifetime = lifetime    # life time of a unit
 
         self.P_pwr12 = 1147         #in MW, the electrical power output of PWR12
 
@@ -64,9 +69,166 @@ class SMR_eco:
         self.occ_kW = 0.0
 
         # interest during construction
-        self.idc = []
+        self.idc = 0.0
         # O&M cost per unit per year
         self.om_unit_year = 0
+        # fuel cost per unit per year
+        self.fuel_unit_year = 0
+
+        # smr cash flow
+        self.cashflow = []
+        # smr LCOE
+        self.LCOE = 0.0
+        # smr NPV
+        self.NPV = 0.0
+        # smr IRR
+        self.IRR = 0.0
+
+    # calculate the cash flow of from 0 to nth year
+    def cal_cashflow(self,r_discount,y_unit_construct,price_e,cp_year):
+
+        cashflow = []
+
+        # calculate duration for construction
+        y_construction = y_unit_construct * self.n_unit
+
+        # calculate investment per year
+        occ_year = self.occ/y_construction
+
+        # calculate averaged interest per year
+        idc_year = self.idc/y_construction
+
+        # calculate hours per year, ignore leap year
+        hours = 365*24
+
+        for i in range(self.lifetime+int(y_construction/2)):
+            # the very beginning of the project
+            if i == 0:
+                cashflow.append(0.0)
+            elif i > 0 and i <= y_construction:
+                unit_done = int((i-1)/y_unit_construct)
+
+                cost_year = occ_year + (self.om_unit_year+self.fuel_unit_year)*unit_done + idc_year#+self.idc[i]#*(1+r_discount)**i 
+                production_year = ((self.P_unit*unit_done*hours*cp_year) * price_e)#*(1+r_discount)**i
+
+                cashflow_year = (cashflow[-1]*1e6 + production_year - cost_year)/1e6        # convert to million dollar 
+
+                cashflow.append(cashflow_year)
+
+            else:
+                cost_year = ((self.om_unit_year+self.fuel_unit_year)*self.n_unit)#*(1+r_discount)**i 
+                production_year = ((self.P_unit*self.n_unit*hours*cp_year) * price_e)#*(1+r_discount)**i
+
+                cashflow_year = (cashflow[-1]*1e6 + production_year - cost_year)/1e6        # convert to million dollar 
+
+                cashflow.append(cashflow_year)
+
+
+        self.cashflow = self.cashflow + cashflow
+
+    # calculate the levelized cost of electricity used
+    def cal_LCOE(self,r_discount,y_unit_construct,price_e,cp_year):
+
+        # calculate duration for construction
+        y_construction = y_unit_construct * self.n_unit
+
+        # calculate investment per year
+        occ_year = self.occ/y_construction
+
+        # calculate hours per year, ignore leap year
+        hours = 365*24
+
+        for i in range(self.lifetime + int(y_construction/2)):
+            # the very beginning of the project
+            if i == 0:
+                cost = 0.0
+                production = 0.0
+
+            elif i > 0 and i <= y_construction:
+                unit_done = int((i-1)/y_unit_construct)
+
+                cost_year = (occ_year + (self.om_unit_year+self.fuel_unit_year)*unit_done)/(1+r_discount)**i 
+                production_year = (self.P_unit*unit_done*hours*cp_year)/(1+r_discount)**i
+
+                cost = cost + cost_year
+                production = production + production_year
+
+
+            else:
+                cost_year = ((self.om_unit_year+self.fuel_unit_year)*self.n_unit)/(1+r_discount)**i 
+                production_year = (self.P_unit*self.n_unit*hours*cp_year)/(1+r_discount)**i
+
+                cost = cost + cost_year
+                production = production + production_year
+
+        LCOE = cost/production  # unit in $/MWh
+
+
+        print ('smr levelized cost of electricity: ',LCOE, ' $/MWh')
+
+        self.LCOE = self.LCOE + LCOE
+
+    # calculate Net Present Value (NPV)
+    def cal_NPV(self,r_discount):
+
+        # calculate duration for construction
+        y_construction = y_unit_construct * self.n_unit
+
+        NPV = 0
+
+        for i in range(self.lifetime+int(y_construction/2)):
+            NPV_curr = self.cashflow[i]/(1+r_discount)**i
+
+            NPV = NPV + NPV_curr
+
+        self.NPV = self.NPV + NPV
+    
+    # calculate Internal Rate of Return (IRR)
+    def cal_IRR(self,r_discount):
+
+        # calculate duration for construction
+        y_construction = y_unit_construct * self.n_unit
+
+        IRR = r_discount
+
+        NPV = self.NPV
+
+        epsi = 1e-6
+
+        step_size = 0.01
+
+        n_iter = 0
+
+        iter_max = 100
+
+        while abs(NPV) > epsi:
+
+            if NPV > 0:
+
+                IRR = IRR + step_size
+            else:
+                IRR = IRR - step_size
+
+            NPV_new = 0.0
+
+            for i in range(self.lifetime+int(y_construction/2)):
+
+                NPV_curr = self.cashflow[i]/(1+IRR)**i
+
+                NPV_new = NPV_new + NPV_curr
+
+            if NPV_new * NPV < 0:
+                step_size = step_size/2
+
+            NPV = NPV_new
+
+            n_iter = n_iter + 1
+
+            if n_iter > iter_max:
+                print ('not converge')
+                break
+
+        self.IRR = self.IRR + IRR
 
     # calculate the overnight calpatical cost
     def cal_OCC(self,ME_2_curr,ME_9_curr,eta_direct,eta_indirect,x,y,z,k,r_learning): 
@@ -96,27 +258,44 @@ class SMR_eco:
         self.occ_kW = self.occ_kW + occ_kW
 
     # calculate interest during construction (IDC)
-    def cal_IDC(self,r_interest,y_construct):
+    def cal_IDC(self,r_discount,y_unit_construct):
         idc = []
 
-        for i in range(y_construct):
-            n = i + 1
-            idc_curr = n/2 * (self.occ/n * (1+r_interest)**(n-1) - self.occ/n)
-            idc.append(idc_curr)
+        # calculate total construction time
+        y_construct = y_unit_construct * self.n_unit
+
+#        for i in range(y_construct+1):
+#            n = i + 1
+#            idc_curr = n/2 * (self.occ/n * (1+r_discount)**(n-1) - self.occ/n)
+#            idc.append(idc_curr)
         
+        idc = y_construct/2 * (self.occ/y_construct * (1+r_discount)**(y_construct-1) - self.occ/y_construct)
+
         self.idc = self.idc + idc
 
     # calculate operation and maintainence cost per unit per year
-    def cal_OM_unit(self,om_cost_kWh):
+    def cal_OM_unit(self,om_cost_MWh):
         # calculate hours per year, ignore leap year
         hours = 365*24
         # elecectricity produced per unit per year
-        P_kWh = self.P_unit * hours
+        P_MWh = self.P_unit * hours 
 
         # calculate O&M cost per unit per year
-        om_unit_year = om_cost_kWh * P_kWh
+        om_unit_year = om_cost_MWh * P_MWh
 
         self.om_unit_year = self.om_unit_year + om_unit_year
+
+    # calculate fuel cost per unit per year
+    def cal_fuel_unit(self,fuel_cost_MWh):
+        # calculate hours per year, ignore leap year
+        hours = 365*24
+        # elecectricity produced per unit per year
+        P_MWh = self.P_unit * hours
+
+        # calculate O&M cost per unit per year
+        fuel_unit_year = fuel_cost_MWh * P_MWh
+
+        self.fuel_unit_year = self.fuel_unit_year + fuel_unit_year
 
     # calculate co-site factor 
     def cosite_factor(self):
@@ -553,7 +732,7 @@ a test class for SMR_eco
 
 """
 P_unit = 50             #electrical power in MW
-n_unit = 3
+n_unit = 4
 year = 2018
 FOAK = 1
 lifetime = 60           # life time the npp
@@ -571,13 +750,22 @@ k = 0.02
 r_learning = 0.03
 
 # interest rate 
-r_interest = 0.05
+r_discount = 0.05
 
-# construction time, in year
-y_construct = 6
+# construction time of a unit, in year
+y_unit_construct = 2
 
-# operation and maintainess cost, dollar per kWh 
-om_cost_kWh = 33.5  
+# operation and maintainess cost, dollar per MWh 
+om_cost_MWh = 33.5  
+
+# fuel cost, dollar per MWh 
+fuel_cost_MWh = 8.26 
+
+# unit average availability
+cp_year = 0.85
+
+# electricty price per MWh
+price_e = 120
 
 smr = SMR_eco(P_unit,n_unit,year,lifetime,FOAK)
 
@@ -589,7 +777,26 @@ print ('PWR12 cost per kW: ', cost_kW_pwr12)
 
 smr.cal_OCC(ME_2_curr,ME_9_curr,eta_direct,eta_indirect,x,y,z,k,r_learning)
 print ('total cost of the NPP: ', '%.9e'%smr.occ)
-#smr.cal_IDC(r_interest,y_construct)
-#print (smr.idc)
-smr.cal_OM_unit(om_cost_kWh)
+print ('total cost of the NPP per kW: ', smr.occ_kW)
+smr.cal_IDC(r_discount,y_unit_construct)
+print ('interest to pay each year: ', smr.idc)
+smr.cal_OM_unit(om_cost_MWh)
 print ('O&M cost per unit per year: ',smr.om_unit_year)
+smr.cal_fuel_unit(fuel_cost_MWh)
+print ('fuel cost per unit per year: ',smr.fuel_unit_year)
+smr.cal_cashflow(r_discount,y_unit_construct,price_e,cp_year)
+cashflow = smr.cashflow
+
+smr.cal_LCOE(r_discount,y_unit_construct,price_e,cp_year)
+
+y_tot = lifetime+int((y_unit_construct*n_unit)/2)
+post_process.plt_cashflow(y_tot,cashflow)
+
+smr.cal_NPV(r_discount)
+print ('SMR net present value: ', smr.NPV)
+smr.cal_IRR(r_discount)
+print ('SMR internal rate of return: ', smr.IRR)
+
+
+
+
