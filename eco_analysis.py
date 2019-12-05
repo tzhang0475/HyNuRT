@@ -3,7 +3,7 @@
 # File              : eco_analysis.py
 # Author            : tzhang
 # Date              : 26.11.2019
-# Last Modified Date: 04.12.2019
+# Last Modified Date: 05.12.2019
 # Last Modified By  : tzhang
 
 import sys
@@ -71,9 +71,11 @@ class SMR_eco:
         # interest during construction
         self.idc = 0.0
         # O&M cost per unit per year
-        self.om_unit_year = 0
+        self.om_unit_year = 0.0
         # fuel cost per unit per year
-        self.fuel_unit_year = 0
+        self.fuel_unit_year = 0.0
+        # decommissioning cost per unit per year
+        self.dcms_unit_year = 0.0
 
         # smr cash flow
         self.cashflow = []
@@ -84,8 +86,8 @@ class SMR_eco:
         # smr IRR
         self.IRR = 0.0
 
-    # calculate the cash flow of from 0 to nth year
-    def cal_cashflow(self,r_discount,y_unit_construct,price_e,cp_year):
+    # calculate the net cash flow of from 0 to nth year
+    def cal_NCF(self,y_unit_construct,price_e,f_utilization):
 
         cashflow = []
 
@@ -108,16 +110,16 @@ class SMR_eco:
             elif i > 0 and i <= y_construction:
                 unit_done = int((i-1)/y_unit_construct)
 
-                cost_year = occ_year + (self.om_unit_year+self.fuel_unit_year)*unit_done + idc_year#+self.idc[i]#*(1+r_discount)**i 
-                production_year = ((self.P_unit*unit_done*hours*cp_year) * price_e)#*(1+r_discount)**i
+                cost_year = occ_year + (self.om_unit_year+self.fuel_unit_year+self.dcms_unit_year)*unit_done + idc_year
+                production_year = ((self.P_unit*unit_done*hours*f_utilization) * price_e)
 
                 cashflow_year = (cashflow[-1]*1e6 + production_year - cost_year)/1e6        # convert to million dollar 
 
                 cashflow.append(cashflow_year)
 
             else:
-                cost_year = ((self.om_unit_year+self.fuel_unit_year)*self.n_unit)#*(1+r_discount)**i 
-                production_year = ((self.P_unit*self.n_unit*hours*cp_year) * price_e)#*(1+r_discount)**i
+                cost_year = ((self.om_unit_year+self.fuel_unit_year+self.dcms_unit_year)*self.n_unit)#*(1+r_discount)**i 
+                production_year = ((self.P_unit*self.n_unit*hours*f_utilization) * price_e)#*(1+r_discount)**i
 
                 cashflow_year = (cashflow[-1]*1e6 + production_year - cost_year)/1e6        # convert to million dollar 
 
@@ -127,7 +129,7 @@ class SMR_eco:
         self.cashflow = self.cashflow + cashflow
 
     # calculate the levelized cost of electricity used
-    def cal_LCOE(self,r_discount,y_unit_construct,price_e,cp_year):
+    def cal_LCOE(self,r_discount,y_unit_construct,price_e,f_utilization):
 
         # calculate duration for construction
         y_construction = y_unit_construct * self.n_unit
@@ -147,16 +149,16 @@ class SMR_eco:
             elif i > 0 and i <= y_construction:
                 unit_done = int((i-1)/y_unit_construct)
 
-                cost_year = (occ_year + (self.om_unit_year+self.fuel_unit_year)*unit_done)/(1+r_discount)**i 
-                production_year = (self.P_unit*unit_done*hours*cp_year)/(1+r_discount)**i
+                cost_year = (occ_year + (self.om_unit_year+self.fuel_unit_year+self.dcms_unit_year)*unit_done)/(1+r_discount)**i 
+                production_year = (self.P_unit*unit_done*hours*f_utilization)/(1+r_discount)**i
 
                 cost = cost + cost_year
                 production = production + production_year
 
 
             else:
-                cost_year = ((self.om_unit_year+self.fuel_unit_year)*self.n_unit)/(1+r_discount)**i 
-                production_year = (self.P_unit*self.n_unit*hours*cp_year)/(1+r_discount)**i
+                cost_year = ((self.om_unit_year+self.fuel_unit_year+self.dcms_unit_year)*self.n_unit)/(1+r_discount)**i 
+                production_year = (self.P_unit*self.n_unit*hours*f_utilization)/(1+r_discount)**i
 
                 cost = cost + cost_year
                 production = production + production_year
@@ -169,7 +171,10 @@ class SMR_eco:
         self.LCOE = self.LCOE + LCOE
 
     # calculate Net Present Value (NPV)
-    def cal_NPV(self,r_discount):
+    def cal_NPV(self,r_discount,r_inflation):
+
+        # calculate the real rate of interest
+        r_interest = r_discount + r_inflation
 
         # calculate duration for construction
         y_construction = y_unit_construct * self.n_unit
@@ -177,19 +182,20 @@ class SMR_eco:
         NPV = 0
 
         for i in range(self.lifetime+int(y_construction/2)):
-            NPV_curr = self.cashflow[i]/(1+r_discount)**i
+            NPV_curr = self.cashflow[i]/(1+r_interest)**i
 
             NPV = NPV + NPV_curr
 
         self.NPV = self.NPV + NPV
     
     # calculate Internal Rate of Return (IRR)
-    def cal_IRR(self,r_discount):
+    def cal_IRR(self,r_discount,r_inflation):
 
         # calculate duration for construction
         y_construction = y_unit_construct * self.n_unit
 
-        IRR = r_discount
+        # initial guess of IRR
+        IRR = r_discount + r_inflation
 
         NPV = self.NPV
 
@@ -260,25 +266,20 @@ class SMR_eco:
     # calculate interest during construction (IDC)
     def cal_IDC(self,r_discount,y_unit_construct):
         idc = []
-
+        
         # calculate total construction time
         y_construct = y_unit_construct * self.n_unit
-
-#        for i in range(y_construct+1):
-#            n = i + 1
-#            idc_curr = n/2 * (self.occ/n * (1+r_discount)**(n-1) - self.occ/n)
-#            idc.append(idc_curr)
         
         idc = y_construct/2 * (self.occ/y_construct * (1+r_discount)**(y_construct-1) - self.occ/y_construct)
 
         self.idc = self.idc + idc
 
     # calculate operation and maintainence cost per unit per year
-    def cal_OM_unit(self,om_cost_MWh):
+    def cal_OM_unit(self,om_cost_MWh,f_utilization):
         # calculate hours per year, ignore leap year
         hours = 365*24
         # elecectricity produced per unit per year
-        P_MWh = self.P_unit * hours 
+        P_MWh = self.P_unit * hours * f_utilization 
 
         # calculate O&M cost per unit per year
         om_unit_year = om_cost_MWh * P_MWh
@@ -286,16 +287,29 @@ class SMR_eco:
         self.om_unit_year = self.om_unit_year + om_unit_year
 
     # calculate fuel cost per unit per year
-    def cal_fuel_unit(self,fuel_cost_MWh):
+    def cal_fuel_unit(self,fuel_cost_MWh,f_utilization):
         # calculate hours per year, ignore leap year
         hours = 365*24
         # elecectricity produced per unit per year
-        P_MWh = self.P_unit * hours
+        P_MWh = self.P_unit * hours * f_utilization
 
         # calculate O&M cost per unit per year
         fuel_unit_year = fuel_cost_MWh * P_MWh
 
         self.fuel_unit_year = self.fuel_unit_year + fuel_unit_year
+
+    # calculate the decommissioning cost per unit per year
+    def cal_decommissioning_unit(self,dcms_cost_MWh,f_utilization):
+        # calculate hours per year, ignore leap year
+        hours = 365*24
+        # elecectricity produced per unit per year
+        P_MWh = self.P_unit * hours * f_utilization 
+
+        # calculate O&M cost per unit per year
+        dcms_unit_year = dcms_cost_MWh * P_MWh
+
+        self.dcms_unit_year = self.dcms_unit_year + dcms_unit_year
+
 
     # calculate co-site factor 
     def cosite_factor(self):
@@ -731,6 +745,7 @@ print ('PWR12 cost per kW', cost_kW_pwr12)
 a test class for SMR_eco
 
 """
+sub_sys1 = 'smr'
 P_unit = 50             #electrical power in MW
 n_unit = 4
 year = 2018
@@ -740,6 +755,27 @@ lifetime = 60           # life time the npp
 eta_direct = 0.51              # oecd nea value, large uncentainty
 eta_indirect = 0.51              # oecd nea value, large uncentainty
 
+# operation and maintainess cost, dollar per MWh 
+om_cost_MWh = 25.8  
+# fuel cost, dollar per MWh 
+fuel_cost_MWh = 8.26
+# decommisioning cost per MWh
+dcms_cost_MWh = 0.16 
+
+# construction time of a unit, in year
+y_unit_construct = 2
+
+# electricty price per MWh
+price_e = 130
+
+# the utilization factor
+f_uti = 0.85
+
+# discount rate 
+r_discount = 0.05
+# inflation rate
+r_inflation = 0.03
+
 # config learning factors
 x = 0.15
 y = 0.74
@@ -747,25 +783,9 @@ z = 0.82
 k = 0.02
 
 # technology learning rate
-r_learning = 0.03
+r_learning = 0.04
 
-# interest rate 
-r_discount = 0.05
 
-# construction time of a unit, in year
-y_unit_construct = 2
-
-# operation and maintainess cost, dollar per MWh 
-om_cost_MWh = 33.5  
-
-# fuel cost, dollar per MWh 
-fuel_cost_MWh = 8.26 
-
-# unit average availability
-cp_year = 0.85
-
-# electricty price per MWh
-price_e = 120
 
 smr = SMR_eco(P_unit,n_unit,year,lifetime,FOAK)
 
@@ -779,24 +799,285 @@ smr.cal_OCC(ME_2_curr,ME_9_curr,eta_direct,eta_indirect,x,y,z,k,r_learning)
 print ('total cost of the NPP: ', '%.9e'%smr.occ)
 print ('total cost of the NPP per kW: ', smr.occ_kW)
 smr.cal_IDC(r_discount,y_unit_construct)
-print ('interest to pay each year: ', smr.idc)
-smr.cal_OM_unit(om_cost_MWh)
+print ('total interest to pay: ', smr.idc)
+smr.cal_OM_unit(om_cost_MWh,f_uti)
 print ('O&M cost per unit per year: ',smr.om_unit_year)
-smr.cal_fuel_unit(fuel_cost_MWh)
+smr.cal_fuel_unit(fuel_cost_MWh,f_uti)
 print ('fuel cost per unit per year: ',smr.fuel_unit_year)
-smr.cal_cashflow(r_discount,y_unit_construct,price_e,cp_year)
+smr.cal_decommissioning_unit(dcms_cost_MWh,f_uti)
+print ('decommissioning cost per unit per year: ',smr.dcms_unit_year)
+
+smr.cal_NCF(y_unit_construct,price_e,f_uti)
 cashflow = smr.cashflow
 
-smr.cal_LCOE(r_discount,y_unit_construct,price_e,cp_year)
+smr.cal_LCOE(r_discount,y_unit_construct,price_e,f_uti)
+print ('smr levelized cost of electricity: ',smr.LCOE, ' $/MWh')
 
 y_tot = lifetime+int((y_unit_construct*n_unit)/2)
-post_process.plt_cashflow(y_tot,cashflow)
+post_process.plt_cashflow(y_tot,cashflow,sub_sys1)
 
-smr.cal_NPV(r_discount)
-print ('SMR net present value: ', smr.NPV)
-smr.cal_IRR(r_discount)
+smr.cal_NPV(r_discount,r_inflation)
+print ('SMR net present value: ', smr.NPV, 'million $')
+smr.cal_IRR(r_discount,r_inflation)
 print ('SMR internal rate of return: ', smr.IRR)
 
+print ('\n')
 
 
+"""
+
+economical analysis of the wind farm
+
+"""
+
+class wind_eco:
+    def __init__(self,P_lim,n_unit,lifetime):
+        self.P_lim = P_lim
+        self.n_unit = n_unit
+        self.lifetime = lifetime
+
+        # overnight capital cost of the wind farm
+        self.occ = 0.0
+
+        # O&M cost per unit per year
+        self.om_unit_year = 0.0
+
+        # decommissioning cost per unit per year
+        self.dcms_unit_year = 0.0
+
+        # wind farm cash flow
+        self.cashflow = []
+        # wind farm LCOE
+        self.LCOE = 0.0
+        # wind farm NPV
+        self.NPV = 0.0
+        # wind farm IRR
+        self.IRR = 0.0
+
+
+    # calculate the net cash flow of from 0 to nth year
+    def cal_NCF(self,price_e,f_inter):
+
+        cashflow = []
+
+        # calculate hours per year, ignore leap year
+        hours = 365*24
+
+        for i in range(self.lifetime+1):
+            # the very beginning of the project
+            if i == 0:
+                cashflow.append(0.0)
+            elif i == 1:
+                cost_year = self.occ
+                production_year = 0.0
+
+                cashflow_year = (cashflow[-1]*1e6 + production_year - cost_year)/1e6        # convert to million dollar 
+
+                cashflow.append(cashflow_year)
+
+            else:
+                cost_year = ((self.om_unit_year+self.dcms_unit_year)*self.n_unit)
+                production_year = ((self.P_lim*self.n_unit*hours*f_inter) * price_e)
+
+                cashflow_year = (cashflow[-1]*1e6 + production_year - cost_year)/1e6        # convert to million dollar 
+
+                cashflow.append(cashflow_year)
+
+
+        self.cashflow = self.cashflow + cashflow
+    
+    # calculate the levelized cost of electricity used
+    def cal_LCOE(self,r_discount,price_e,f_inter):
+
+        # calculate hours per year, ignore leap year
+        hours = 365*24
+
+        for i in range(self.lifetime+1):
+            # the very beginning of the project
+            if i == 0:
+                cost = 0.0
+                production = 0.0
+
+            elif i == 1:
+
+                cost_year = self.occ/(1+r_discount)**i 
+                production_year = 0.0
+
+                cost = cost + cost_year
+                production = production + production_year
+
+
+            else:
+                cost_year = ((self.om_unit_year+self.dcms_unit_year)*self.n_unit)/(1+r_discount)**i 
+                production_year = (self.P_lim*self.n_unit*hours*f_inter)/(1+r_discount)**i
+
+                cost = cost + cost_year
+                production = production + production_year
+
+        LCOE = cost/production  # unit in $/MWh
+        
+        self.LCOE = self.LCOE + LCOE
+
+    # calculate Net Present Value (NPV)
+    def cal_NPV(self,r_discount,r_inflation):
+
+        # calculate the real rate of interest
+        r_interest = r_discount + r_inflation
+
+        NPV = 0
+
+        for i in range(self.lifetime+1):
+            NPV_curr = self.cashflow[i]/(1+r_interest)**i
+
+            NPV = NPV + NPV_curr
+
+        self.NPV = self.NPV + NPV
+    
+    # calculate Internal Rate of Return (IRR)
+    def cal_IRR(self,r_discount,r_inflation):
+
+        # initial guess of IRR
+        IRR = r_discount + r_inflation
+
+        NPV = self.NPV
+
+        epsi = 1e-6
+
+        step_size = 0.01
+
+        n_iter = 0
+
+        iter_max = 100
+
+        while abs(NPV) > epsi:
+
+            if NPV > 0:
+
+                IRR = IRR + step_size
+            else:
+                IRR = IRR - step_size
+
+            NPV_new = 0.0
+
+            for i in range(self.lifetime+1):
+
+                NPV_curr = self.cashflow[i]/(1+IRR)**i
+
+                NPV_new = NPV_new + NPV_curr
+
+            if NPV_new * NPV < 0:
+                step_size = step_size/2
+
+            NPV = NPV_new
+
+            n_iter = n_iter + 1
+
+            if n_iter > iter_max:
+                print ('not converge')
+                break
+
+        self.IRR = self.IRR + IRR
+
+
+
+    # calculate the overnight capital cost of the wind farm
+    def cal_OCC(self,cost_kW):
+        
+        # capital cost of a wind turbine
+        cost_unit = cost_kW * self.P_lim * 1000
+        # capical cost of the wind farm
+        occ = cost_unit * self.n_unit
+
+        self.occ = self.occ + occ
+
+    # calculate the o&m cost per year
+    def cal_OM_unit(self,om_cost_MWh,f_inter):
+        # calculate hours per year, ignore leap year
+        hours = 365*24
+        # elecectricity produced per unit per year
+        P_MWh = self.P_lim * hours * f_inter 
+
+        # calculate O&M cost per unit per year
+        om_unit_year = om_cost_MWh * P_MWh
+
+        self.om_unit_year = self.om_unit_year + om_unit_year
+
+    # calculate the decommissioning cost per unit per year
+    def cal_decommissioning_unit(self,dcms_cost_MWh,f_inter):
+        # calculate hours per year, ignore leap year
+        hours = 365*24
+        # elecectricity produced per unit per year
+        P_MWh = self.P_lim * hours * f_inter
+
+        # calculate O&M cost per unit per year
+        dcms_unit_year = dcms_cost_MWh * P_MWh
+
+        self.dcms_unit_year = self.dcms_unit_year + dcms_unit_year
+
+
+
+
+"""
+
+a test class for wind_eco
+
+"""
+sub_sys2 = 'windfarm'
+P_lim = 2           # in MW
+w_n_unit = 40   
+w_lifetime = 30     # 30 years life time
+loc_type = 1        # 1 for land wind farm, 0 for off-shore wind farm
+
+# discount rate 
+r_discount = 0.05
+# inflation rate
+r_inflation = 0.03
+
+# electricty price per MWh
+price_e = 130
+
+# captical cost of a wind turbine per kW
+cost_kW = 1590      # $ per kW 
+
+# om cost of a wind turbine per MWh
+w_om_cost_MWh = 14.4
+
+# decommissioning cost of a wind turbine per MWh
+w_dcms_cost_MWh = 4.0
+
+# wind farm intermittence factor
+f_inter = 0.3
+
+
+wfarm = wind_eco(P_lim,w_n_unit,w_lifetime)
+wfarm.cal_OCC(cost_kW)
+print ('total wind farm capital cost: ', wfarm.occ)
+wfarm.cal_OM_unit(w_om_cost_MWh,f_inter)
+print ('om cost of per turbine per year: ', wfarm.om_unit_year)
+wfarm.cal_decommissioning_unit(dcms_cost_MWh,f_inter)
+print ('decommissioning cost per turbine per year: ',smr.dcms_unit_year)
+
+wfarm.cal_NCF(price_e,f_inter)
+cashflow = wfarm.cashflow
+
+
+wfarm.cal_LCOE(r_discount,price_e,f_inter)
+print ('wind farm levelized cost of electricity: ',wfarm.LCOE, ' $/MWh')
+
+y_tot = w_lifetime+1
+post_process.plt_cashflow(y_tot,cashflow,sub_sys2)
+
+wfarm.cal_NPV(r_discount,r_inflation)
+print ('wind farm net present value: ', wfarm.NPV, 'million $')
+wfarm.cal_IRR(r_discount,r_inflation)
+print ('wind farm internal rate of return: ', wfarm.IRR)
+
+print ('\n')
+
+
+"""
+
+economical analysis of the hydrogen cluster
+
+"""
 
