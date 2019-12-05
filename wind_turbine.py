@@ -3,7 +3,7 @@
 # File              : wind_turbine.py
 # Author            : tzhang
 # Date              : 28.10.2019
-# Last Modified Date: 21.11.2019
+# Last Modified Date: 04.12.2019
 # Last Modified By  : tzhang
 
 import math
@@ -31,7 +31,7 @@ class wind_Turbine:
         self.J_turbine = J_turbine  # moment of inertia of turbine
         self.h_hub = h_hub          # the height of the hub
        
-        self.P_lim = P_lim         # power limit of the wind turbine, in W (usually the limit is about 2 MW, normaly between 0.5 to 3.6 MW
+        self.P_lim = P_lim*1e6     # power limit of the wind turbine, in W (usually the limit is about 2 MW, normaly between 0.5 to 3.6 MW
         self.cut_in = cut_in       # cut in velocity of wind turbine
         self.cut_out  = cut_out    # cut out energy of the wind turbine         
 

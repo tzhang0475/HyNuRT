@@ -3,7 +3,7 @@
 # File              : prepost_process.py
 # Author            : tzhang
 # Date              : 25.11.2019
-# Last Modified Date: 04.12.2019
+# Last Modified Date: 05.12.2019
 # Last Modified By  : tzhang
 
 from matplotlib import pyplot as plt
@@ -67,7 +67,7 @@ class post_process:
         plt.savefig(pltName,dpi = 100)
 
     # plot cash flow of n years
-    def plt_cashflow(n_year,cashflow):
+    def plt_cashflow(n_year,cashflow,system):
         
         year = np.arange(0,n_year,1) 
 
@@ -78,7 +78,7 @@ class post_process:
         plt.ylabel('Cash Flow ($ in Million)', fontsize = '16')
         plt.grid(linestyle='--',linewidth = '1')
 
-        pltName = 'cashflow.png'
+        pltName = system+'_'+'cashflow.png'
         plt.savefig(pltName,dpi = 100)
 
 
