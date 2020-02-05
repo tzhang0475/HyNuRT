@@ -3,7 +3,7 @@
 # File              : eco_analysis.py
 # Author            : tzhang
 # Date              : 26.11.2019
-# Last Modified Date: 05.12.2019
+# Last Modified Date: 30.01.2020
 # Last Modified By  : tzhang
 
 import sys
@@ -776,6 +776,9 @@ r_discount = 0.05
 # inflation rate
 r_inflation = 0.03
 
+# energy inflation rate
+e_inflation = 0.05
+
 # config learning factors
 x = 0.15
 y = 0.74
@@ -827,6 +830,11 @@ print ('\n')
 """
 
 economical analysis of the wind farm
+
+REFERENCES:
+    - Stehly, Tyler J., Heimiller, Donna M., and Scott, George N. 2016 Cost of Wind Energy Review. United States: N. p., 2017. Web. doi:10.2172/1415731.
+    - Magdi Ragheb, Chapter 25 - Economics of Wind Power Generation, Editor(s): Trevor M. Letcher, Wind Energy Engineering, Academic Press,2017,Pages 537-555,ISBN 9780128094518,doi:10.1016/B978-0-12-809451-8.00025-4.
+    - María Isabel Blanco,The economics of wind energy,Renewable and Sustainable Energy Reviews,Volume 13, Issues 6–7,2009,Pages 1372-1382,ISSN 1364-0321,doi:10.1016/j.rser.2008.09.004.
 
 """
 
@@ -1015,8 +1023,6 @@ class wind_eco:
         self.dcms_unit_year = self.dcms_unit_year + dcms_unit_year
 
 
-
-
 """
 
 a test class for wind_eco
@@ -1031,7 +1037,10 @@ loc_type = 1        # 1 for land wind farm, 0 for off-shore wind farm
 # discount rate 
 r_discount = 0.05
 # inflation rate
-r_inflation = 0.03
+r_inflation = 0.025
+
+# energy inflation rate
+e_inflation = 0.05
 
 # electricty price per MWh
 price_e = 130
@@ -1077,7 +1086,112 @@ print ('\n')
 
 """
 
-economical analysis of the hydrogen cluster
+economical analysis of the PEM cluster
+
+REFERENCE:
+    - University of California, Berkeley, Wei, Max, Lipman, Timothy, Mayyas, Ahmad, Chien, Joshua, Chan, Shuk Han, Gosselin, David, Breunig, Hanna, Stadler, Michael, McKone, Thomas, Beattie, Paul, Chong, Patricia, Colella, Whitney, and James, Brian. A Total Cost of Ownership Model for Low Temperature PEM Fuel Cells in Combined Heat and Power and Backup Power Applications. United States: N. p., 2014. Web. doi:10.2172/1163271.
+    - Saur, G. Wind-To-Hydrogen Project: Electrolyzer Capital Cost Study. United States: N. p., 2008. Web. doi:10.2172/944892.
+    - Schoots K, Ferioli F, Kramer GJ, Zwaan, van der BCC. Learning curves for hydrogen production technology: An assessment of observed cost reductions. International Journal of Hydrogen Energy. 2008;33(11):2630-2645. doi: 10.1016/j.ijjhydene.2008.03.011
+
+"""
+# an cost model with brakdown of PEM 
+class h2_cost_breakdown:
+    def __init__(self,Pmax_unit,n_unit):
+        self.Pmax_unit = Pmax_unit*1000 # convert MW to kW
+        self.n_unit = n_unit
+
+        self.cost_layer = 0.0
+
+    
+    # capital cost breakdown: stack cost (membrane electrode assembly (MEA) cost, and flow plates cost, and assembly), balance of plant (BoP), Power electrionics cost, gas conditioning cost
+
+    # stack cost in $/kw 
+    # catalyst cost (related to pladium price)
+    def cata_cost():
+        pass
+
+    # gas diffusion layer cost
+    def layer_cost(self,cost_layer_kW):
+        cost_layer = self.n_unit * self.Pmax_unit * cost_layer_kW
+        
+        self.cost_layer = cost_layer
+
+    # membrane cost
+    def mem_cost():
+        pass
+
+    # electrode cost
+    def elec_cost():
+        pass
+
+    # flow plate cost
+    def plate_cost():
+        pass
+
+    # stack assembly cost (MEA+cost)
+    def assembly_cost():
+        pass
+
+
+    # Blance of Plant (BoP) cost 
+    # hydrogen management cost
+    def h2manage_cost():
+        pass
+
+    # air management cost
+    def airmanage_cost():
+        pass
+
+    # temperature management cost
+    def tempmanage_cost():
+        pass
+
+    # other cost
+    def other_cost():
+        pass
+
+
+# an cost model of PEM with simple cost estimate 
+class h2_cost_simple:
+    def __init__(self,Pmax_unit,n_unit):
+        self.Pmax_unit = Pmax_unit*1000 # convert MW to kW
+        self.n_unit = n_unit
+
+        self.cost_CAPEX = 0
+        self.cost_OPEX = 0
+        self.cost = 0
+
+    # CAPEX of PEM
+    def cal_CAPEX(self,capex_kw):
+        cost_CAPEX = capex_kw * self.Pmax_unit * self.n_unit
+
+        self.cost_CAPEX = cost_CAPEX
+
+    # OPEX of PEM 
+    def cal_OPEX(self,capex_kw,cap_op_ratio):
+        opex_kw = capex_kw * cap_op_ratio
+
+        cost_OPEX = capex_kw * self.Pmax_unit * self.n_unit
+
+        self.cost_OPEX = cost_OPEX
+
+# 
+    
+
+
+
+
+
+
 
 """
 
+a test class for h2sys_eco
+
+"""
+Pmax_unit = 0.5     # maximum power of a unit
+
+
+price_m = 500       # price of membrance price, in $/m^2
+
+rate_p = 
