@@ -3,7 +3,7 @@
 # File              : eco_analysis.py
 # Author            : tzhang
 # Date              : 26.11.2019
-# Last Modified Date: 30.01.2020
+# Last Modified Date: 23.07.2020
 # Last Modified By  : tzhang
 
 import sys
@@ -738,13 +738,13 @@ cost_kW_pwr12 = coa.aquire_cost_kW(ME_2_2018,ME_9_2018)
 
 print ('PWR12 cost per kW', cost_kW_pwr12)
 
+
 """
 
 """
 
 a test class for SMR_eco
 
-"""
 sub_sys1 = 'smr'
 P_unit = 50             #electrical power in MW
 n_unit = 4
@@ -826,6 +826,7 @@ print ('SMR internal rate of return: ', smr.IRR)
 
 print ('\n')
 
+"""
 
 """
 
@@ -1027,7 +1028,6 @@ class wind_eco:
 
 a test class for wind_eco
 
-"""
 sub_sys2 = 'windfarm'
 P_lim = 2           # in MW
 w_n_unit = 40   
@@ -1083,6 +1083,7 @@ print ('wind farm internal rate of return: ', wfarm.IRR)
 
 print ('\n')
 
+"""
 
 """
 
@@ -1153,21 +1154,29 @@ class h2_cost_breakdown:
 
 # an cost model of PEM with simple cost estimate 
 class h2_cost_simple:
-    def __init__(self,Pmax_unit,n_unit):
+    def __init__(self,Pmax_unit,n_unit,lifetime):
         self.Pmax_unit = Pmax_unit*1000 # convert MW to kW
         self.n_unit = n_unit
+        self.lifetime = lifetime
 
         self.cost_CAPEX = 0
         self.cost_OPEX = 0
+#        self.cost_elec = 0
         self.cost = 0
+        self.profit = 0
 
-    # CAPEX of PEM
+        # PEM cashflow 
+        self.cashflow = []
+
+    # CAPEX of a PEM unit, capex_kw in $/kW
     def cal_CAPEX(self,capex_kw):
         cost_CAPEX = capex_kw * self.Pmax_unit * self.n_unit
 
         self.cost_CAPEX = cost_CAPEX
 
-    # OPEX of PEM 
+        return cost_CAPEX
+
+    # OPEX of a PEM unit
     def cal_OPEX(self,capex_kw,cap_op_ratio):
         opex_kw = capex_kw * cap_op_ratio
 
@@ -1175,12 +1184,57 @@ class h2_cost_simple:
 
         self.cost_OPEX = cost_OPEX
 
-# 
-    
+        return cost_OPEX
+
+    # electricity cost of a PEM unit with input power during time peroid (electricity price in $/MWh, time in s, enery in MWh)
+    def cal_cost_elec(self,price_e,energy):
+       
+        # calculate total cost over period of time
+        cost_elec = price_e * energy
+
+        return cost_elec
 
 
+    # profits from hydrogen production (H2_price in $/kg of each year, H2 production mass in kg of each year)
+    def profits_H2(self, price_h2, production_h2):
+        # calculate the profits from H2
+        profit = price_h2 * production_h2 
+
+        self.profit = profit
+
+        return profit
+
+    # net cash flow of the PEM from 0 to nth year, year 0 are construction year, no electricy are consumed, cost are accounted in year 1
+    def cal_NCF(self, lifetime, energy, price_e, price_h2, production_h2):
+        cashflow = []
+
+        # calculate seconds per year, ignore leap year
+        # seconds = 365*24*60*60
+
+        for i in range(self.lifetime+1):
+            # the very beginning of the project
+            if i == 0:
+                cashflow.append(0.0)
+            elif i == 1:
+                cost_elec_year = self.cal_cost_elec(price_e[i],energy[i])
+                cost_year = self.cost_CAPEX + self.cost_OPEX + cost_elec_year
+                profit_year = self.profits_H2(price_h2[i],production_h2[i]) 
+
+                cashflow_year = (cashflow[-1] + profit_year - cost_year)/1e6        # convert to million dollar 
+
+                cashflow.append(cashflow_year)
+
+            else:
+                cost_elec_year = self.cal_cost_elec(price_e[i],energy[i])
+                cost_year = self.cost_OPEX + cost_elec_year
+                profit_year = self.profits_H2(price_h2[i],production_h2[i]) 
+
+                cashflow_year = (cashflow[-1] + profit_year - cost_year)/1e6        # convert to million dollar 
+
+                cashflow.append(cashflow_year)
 
 
+        self.cashflow = self.cashflow + cashflow
 
 
 
@@ -1190,8 +1244,34 @@ a test class for h2sys_eco
 
 """
 Pmax_unit = 0.5     # maximum power of a unit
+n_unit = 10         # number of units
+
+capex_kw = 1400     # capital cost per kW
+
+cap_op_ratio = 0.02 # capital cost operational cost ratio
+
+price_e = [0,130,130,130,130,130]       # electricty price per MWh
+
+energy = [0, 100,100,100,100,100]
+
+price_h2 = [0,14,14,14,14,14]     # price of h2 per kg
+production_h2 = [0,6000,6000,6000,6000,6000]    # production in kg of each year (or other unit time, year is for cash flow analysis)
+
+lifetime = 5
+
+# calculate PEM cost and profit
+PEM_eco = h2_cost_simple(Pmax_unit,n_unit,lifetime)
+
+cost_CAPEX = PEM_eco.cal_CAPEX(capex_kw)
+cost_OPEX = PEM_eco.cal_OPEX(capex_kw,cap_op_ratio)
+
+PEM_eco.cal_NCF(lifetime,energy,price_e, price_h2, production_h2)
+
+print (PEM_eco.cashflow)
+"""
+
+a test class for h2sys_eco
+
+"""
 
 
-price_m = 500       # price of membrance price, in $/m^2
-
-rate_p = 
