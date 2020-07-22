@@ -3,7 +3,7 @@
 # File              : H2Cell.py
 # Author            : tzhang
 # Date              : 13.11.2019
-# Last Modified Date: 25.11.2019
+# Last Modified Date: 09.12.2019
 # Last Modified By  : tzhang
 
 """
@@ -26,10 +26,10 @@ class h2_module:
     def __init__(self,theta_m,A,alpha_an,alpha_cat,i0_an,i0_cat,\
             T,P_h2,P_o2,P_h2o,\
             iter_max):
-        self.n = 2 # electron number
-        self.theta_m = theta_m # the thickness of membrane
-        self.A = A             # the area of the membrane
-        self.T = T
+        self.n = 2                  # electron number
+        self.theta_m = theta_m      # the thickness of membrane
+        self.A = A                  # the area of the membrane
+        self.T = T                  # operating temperature
         self.P_h2 = P_h2
         self.P_o2 = P_o2
         self.P_h2o = P_h2o
