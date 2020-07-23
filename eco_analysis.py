@@ -14,7 +14,7 @@ import math
 # use a tool to calculation inflation, written by 'Los Angeles Times Data and Graphics Department', the project is on GitHub, details see: https://github.com/datadesk/cpi
 # but this module is quite slow
 # later a new model can be developed
-import cpi
+#import cpi
 
 """
 
@@ -1242,7 +1242,6 @@ class h2_cost_simple:
 
 a test class for h2sys_eco
 
-"""
 Pmax_unit = 0.5     # maximum power of a unit
 n_unit = 10         # number of units
 
@@ -1268,10 +1267,166 @@ cost_OPEX = PEM_eco.cal_OPEX(capex_kw,cap_op_ratio)
 PEM_eco.cal_NCF(lifetime,energy,price_e, price_h2, production_h2)
 
 print (PEM_eco.cashflow)
-"""
-
-a test class for h2sys_eco
 
 """
 
+"""
 
+an economic model for a hybrid system
+
+"""
+
+class sys_eco:
+    def __init__(self, sys_lifetime, year_start, year_dec):
+        # lifetime expectation of the system
+        self.sys_lifetime = sys_lifetime
+        # number of components in the system
+        #self.n_comp = n_comp   
+        # the year that start construction of each component
+        self.year_start = year_start 
+        # the year of decommissioning for each component (NPP have longer life time than windfarms or PEM etc.)
+        self.year_dec = year_dec
+
+        # economic parameters
+
+        # system cash flow
+        self.cashflow = []
+        # cashflow of each component
+        self.cashflow_comp = {}
+        # system LCOE
+        self.LCOE = 0.0
+        # system NPV
+        self.NPV = 0.0
+        # system IRR
+        self.IRR = 0.0
+    
+    # adjust cashflow according to real construction plan
+    def _con_plan_(self,cashdic):
+        for i in range(len(cashdic.keys())):
+            cashflow = [1.0]*(self.sys_lifetime+1)
+            key = list(cashdic)[i]
+#            cashflow[(self.year_start[i]-1):(self.year_start[i]+len(cashdic[key]))] = cashdic[key]
+            for n in range(len(cashdic[key])):
+                cashflow[self.year_start[i]-1+n] = cashdic[key][n]
+            print (cashflow)
+            self.cashflow_comp[key] = cashflow
+
+
+
+    # sum up system cash flow
+    def cal_cashflow(self,cashdic):
+        self._con_plan_(cashdic)
+        print (self.cashflow_comp)
+        cashflow = np.zeros(self.sys_lifetime+1)
+        for key in self.cashflow_comp.keys():
+            cashflow = cashflow + np.asarray(self.cashflow_comp[key],dtype=float)
+
+        self.cashflow = cashflow
+
+    # calculate system LCOE
+    def cal_LCOE(self):
+        pass
+
+    # calculate NPV
+    def cal_NPV(self,r_discout,r_inflation):
+        # calculate the real rate of interest
+        r_interest = r_discount + r_inflation
+
+        NPV = 0
+
+        for i in range(self.sys_lifetime+1):
+            NPV_curr = self.cashflow[i]/(1+r_interest)**i
+
+            NPV = NPV + NPV_curr
+
+        self.NPV = NPV
+
+
+
+    # calculate Internal Rate of Return (IRR)
+    def cal_IRR(self,r_discount,r_inflation):
+
+        # initial guess of IRR
+        IRR = r_discount + r_inflation
+
+        NPV = self.NPV
+
+        epsi = 1e-6
+
+        step_size = 0.01
+
+        n_iter = 0
+
+        iter_max = 100
+
+        while abs(NPV) > epsi:
+
+            if NPV > 0:
+                IRR = IRR + step_size
+            else:
+                IRR = IRR - step_size
+
+            NPV_new = 0.0
+
+            for i in range(self.sys_lifetime+1):
+                NPV_curr = self.cashflow[i]/(1+IRR)**i
+                NPV_new = NPV_new + NPV_curr
+
+            if NPV_new * NPV < 0:
+                step_size = step_size/2
+
+            NPV = NPV_new
+
+            n_iter = n_iter + 1
+
+            if n_iter > iter_max:
+                print ('***************')
+                print ('*NOT CONVERGE!*')
+                print ('***************')
+                break
+
+        self.IRR = IRR
+
+
+"""
+
+a test class for a hybrid system
+
+"""
+sys_cashdic = {}
+sys_lifetime = 10
+comp_1_cashflow = []
+comp_2_cashflow = [] 
+comp_3_cashflow = []
+
+# discount rate 
+r_discount = 0.05
+# inflation rate
+r_inflation = 0.03
+
+for i in range(6):
+    comp_1_cashflow.append(float(i))
+
+for i in range(3):
+    comp_2_cashflow.append(float(i))
+
+for i in range(3):
+    comp_3_cashflow.append(float(i))
+
+n_comp = len(sys_cashdic.keys())
+print (n_comp)
+year_start = [1,5,3]
+year_dec = [20,20,20]
+
+sys_cashdic['comp1'] = comp_1_cashflow
+sys_cashdic['comp2'] = comp_2_cashflow
+sys_cashdic['comp3'] = comp_3_cashflow
+
+sys = sys_eco(sys_lifetime, year_start, year_dec)
+
+sys.cal_cashflow(sys_cashdic)
+
+sys.cal_NPV(r_discount,r_inflation)
+sys.cal_IRR(r_discount,r_inflation)
+
+print (sys.NPV,sys.IRR)
