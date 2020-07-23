@@ -3,7 +3,7 @@
 # File              : NuReModel.py
 # Author            : tzhang
 # Date              : 20.11.2019
-# Last Modified Date: 25.11.2019
+# Last Modified Date: 04.12.2019
 # Last Modified By  : tzhang
 
 """
@@ -46,7 +46,7 @@ n_range = 40
 d_wing = 90 # in m,  wind turbine diameter
 J_turbine = 1.3E7 # in kg.m^2, moment of initia of turbine
 h_hub = 50 # in m, the height of the hub
-P_lim = 2E6 # in W, power limit of a turbine
+P_lim = 2  # in MW, power limit of a turbine
 
 cut_in = 4.0
 cut_out = 25.0
