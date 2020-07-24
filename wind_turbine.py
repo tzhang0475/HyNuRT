@@ -3,7 +3,7 @@
 # File              : wind_turbine.py
 # Author            : tzhang
 # Date              : 28.10.2019
-# Last Modified Date: 04.12.2019
+# Last Modified Date: 24.07.2020
 # Last Modified By  : tzhang
 
 import math
@@ -221,6 +221,22 @@ class wind_farm:
             p_farm_array.append(p_farm)
 
         return p_farm_array
+
+    # calculate wind farm intermittence factor
+    def cal_f_inter(self, p_farm_array,time,P_lim):
+        # wind farm output limit during period
+        energy_lim = P_lim * self.n_unit * time[-1]
+
+        # calculate energy output during the period
+        energy_output = 0.0
+        for i in range(1,len(time)):
+            energy = p_farm_array[i-1] * (time[i] - time[i-1])
+            energy_output = energy_output + energy
+
+        # calculate intermittence factor
+        f_inter = energy_output/energy_lim
+
+        return f_inter
 
 
     # plot wind farm output power
