@@ -8,6 +8,8 @@
 
 from matplotlib import pyplot as plt
 import numpy as np
+import pandas as pd
+import os
 
 """
 
@@ -120,7 +122,7 @@ class post_process:
                 f.write('\n')
         f.close()
 
-    # write system performance data to file
+    # write system performance data to text file
     def data_performance(label,time,P_demand,P_coupled,P_to_grid,P_to_h2sys,P_abandon,M_stored_data):
         datafile = 'data_performance_'+label+'.txt'
 
@@ -146,10 +148,45 @@ class post_process:
 
         f.close()
 
+    # write system performance data to excel file
+    def excel_performance(label,time,P_demand,P_coupled,P_to_grid,P_to_h2sys,P_abandon,m_stored_data):
+        datafile = 'data_performance_'+label+'.xlsx'
+        sheetname = 'performance_'+label
+
+        # remove exists file 
+        if os.path.isfile(datafile):
+            os.remove(datafile)
+
+        # write data to xlsx file
+        df = pd.DataFrame({'time':time,\
+                        'grid demand (MW)':P_demand,\
+                        'wind-nuclear generated (MW)': P_coupled,\
+                        'power to grid (MW)':P_to_grid,\
+                        'power to h2 system (MW)':P_to_h2sys,\
+                        'abandoned power (MW)':P_abandon,\
+                        'stored hydrogen (kg)':m_stored_data})
+
+        writer = pd.ExcelWriter(datafile, engine='xlsxwriter')
+
+        df.to_excel(writer,sheet_name = sheetname)
+
+        workbook = writer.book
+        worksheet = writer.sheets[sheetname]
+
+        # set format of data
+        form1 = workbook.add_format({'num_format':'0.00'})
+        form2 = workbook.add_format({'num_format':'0.000'})
+
+        # add format
+        worksheet.set_column('B:G',30,form1)
+        worksheet.set_column('H:H',30,form2)
+
+        writer.save()
+
 
 
     # select data according to time interval, time_interval in unit of minute 
-    def data_opti(time,time_interval,P_demand,P_coupled,P_to_grid,P_to_h2sys,P_abandon,M_stored_data):
+    def data_opti(time,time_interval,P_demand,P_coupled,P_to_grid,P_to_h2sys,P_abandon,m_stored_data):
 
         # select index of requested data
         idx_array = [0]
@@ -158,8 +195,7 @@ class post_process:
                 idx_array.append(i)
             elif time[i-1]%time_interval > time[i]%time_interval and time[i]%time_interval < time[i+1]:
                 idx_array.append(i)
-        idx_array.append(len(time))
-
+        idx_array.append(len(time)-1)
         # new array for selected data
         time_slct = []
         P_demand_slct = []
@@ -167,6 +203,7 @@ class post_process:
         P_to_grid_slct = []
         P_to_h2sys_slct = []
         P_abandon_slct = []
+        m_stored_data_slct = []
 
         for idx in idx_array:
             time_slct.append(time[idx])
@@ -175,8 +212,9 @@ class post_process:
             P_to_grid_slct.append(P_to_grid[idx])
             P_to_h2sys_slct.append(P_to_h2sys[idx])
             P_abandon_slct.append(P_abandon[idx])
+            m_stored_data_slct.append(m_stored_data[idx])
 
-        return time_slct,P_demand_slct,P_coupled_slct,P_to_grid_slct,P_to_h2sys_slct,P_abandon_slct
+        return time_slct,P_demand_slct,P_coupled_slct,P_to_grid_slct,P_to_h2sys_slct,P_abandon_slct,m_stored_data_slct
 
 
 
