@@ -3,7 +3,7 @@
 # File              : prepost_process.py
 # Author            : tzhang
 # Date              : 25.11.2019
-# Last Modified Date: 24.07.2020
+# Last Modified Date: 25.07.2020
 # Last Modified By  : tzhang
 
 from matplotlib import pyplot as plt
@@ -118,3 +118,65 @@ class post_process:
                 for key in cashdic.keys():
                     f.write(cashdic[key][i]+'       ')
                 f.write('\n')
+        f.close()
+
+    # write system performance data to file
+    def data_performance(label,time,P_demand,P_coupled,P_to_grid,P_to_h2sys,P_abandon,M_stored_data):
+        datafile = 'data_performance_'+label+'.txt'
+
+        with open(datafile, 'w+') as f:
+            f.write('time'+'    ')
+            f.write('grid demand'+'      ')
+            f.write('wind-nuclear generated'+'      ')
+            f.write('power to grid'+'      ')
+            f.write('power to h2 system'+'      ')
+            f.write('abandoned power'+'      ')
+            f.write('stored hydrogen'+'      ')
+            f.write('\n')
+
+            for i in range(len(time)):
+                f.write(str('%.2f'%time[i])+'    ')
+                f.write(str('%.2f'%P_demand[i])+'    ')
+                f.write(str('%.2f'%P_coupled[i])+'    ')
+                f.write(str('%.2f'%P_to_grid[i])+'    ')
+                f.write(str('%.2f'%P_to_h2sys[i])+'    ')
+                f.write(str('%.2f'%P_abandon[i])+'    ')
+                f.write(str('%.3f'%M_stored_data[i])+'    ')
+                f.write('\n')
+
+        f.close()
+
+
+
+    # select data according to time interval, time_interval in unit of minute 
+    def data_opti(time,time_interval,P_demand,P_coupled,P_to_grid,P_to_h2sys,P_abandon,M_stored_data):
+
+        # select index of requested data
+        idx_array = [0]
+        for i in range(1,len(time)-1):
+            if time[i]%time_interval == 0:
+                idx_array.append(i)
+            elif time[i-1]%time_interval > time[i]%time_interval and time[i]%time_interval < time[i+1]:
+                idx_array.append(i)
+        idx_array.append(len(time))
+
+        # new array for selected data
+        time_slct = []
+        P_demand_slct = []
+        P_coupled_slct = []
+        P_to_grid_slct = []
+        P_to_h2sys_slct = []
+        P_abandon_slct = []
+
+        for idx in idx_array:
+            time_slct.append(time[idx])
+            P_demand_slct.append(P_demand[idx])
+            P_coupled_slct.append(P_coupled[idx])
+            P_to_grid_slct.append(P_to_grid[idx])
+            P_to_h2sys_slct.append(P_to_h2sys[idx])
+            P_abandon_slct.append(P_abandon[idx])
+
+        return time_slct,P_demand_slct,P_coupled_slct,P_to_grid_slct,P_to_h2sys_slct,P_abandon_slct
+
+
+
