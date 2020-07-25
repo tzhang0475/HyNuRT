@@ -3,7 +3,7 @@
 # File              : sys_control.py
 # Author            : tzhang
 # Date              : 24.11.2019
-# Last Modified Date: 25.11.2019
+# Last Modified Date: 25.07.2020
 # Last Modified By  : tzhang
 
 """
@@ -65,3 +65,30 @@ class balancing:
         P_to_grid = P_coupled + P_h2_produced - P_h2_consumed
 
         return P_to_grid
+
+    # calculate total energy send to pem system
+    def cal_e_acc_h2sys(self,P_to_h2sys,time):
+        e_acc_to_h2sys = [0.0]
+        e_acc_from_h2sys = [0.0]
+        e_acc_net_h2sys = [0.0]
+
+        for i in range(1,len(time)):
+            e_h2 = P_to_h2sys[i-1] * (time[i]-time[i-1])  # please note the unit of time is min here
+            e_h2 = e_h2/60.0    # convert MWmin to MWh
+            if e_h2 > 0:
+                e_acc_h2 = e_acc_to_h2sys[i-1] + e_h2
+                e_acc_to_h2sys.append(e_acc_h2)
+                e_acc_from_h2sys.append(e_acc_from_h2sys[i-1])
+            elif e_h2 < 0:
+                e_acc_h2 = e_acc_from_h2sys[i-1] + e_h2
+                e_acc_to_h2sys.append(e_acc_to_h2sys[i-1])
+                e_acc_from_h2sys.append(e_acc_h2)
+            else:
+                e_acc_to_h2sys.append(e_acc_to_h2sys[i-1])
+                e_acc_from_h2sys.append(e_acc_from_h2sys[i-1])
+
+            e_acc_net = e_acc_net_h2sys[i-1] + e_h2
+            e_acc_net_h2sys.append(e_acc_net)
+
+        return e_acc_to_h2sys,e_acc_from_h2sys,e_acc_net_h2sys
+
