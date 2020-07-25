@@ -3,7 +3,7 @@
 # File              : sys_control.py
 # Author            : tzhang
 # Date              : 24.11.2019
-# Last Modified Date: 25.07.2020
+# Last Modified Date: 26.07.2020
 # Last Modified By  : tzhang
 
 """
@@ -65,6 +65,19 @@ class balancing:
         P_to_grid = P_coupled + P_h2_produced - P_h2_consumed
 
         return P_to_grid
+
+    # calculate total energy send to grid
+    def cal_e_acc_grid(self,P_to_grid,time):
+        e_acc_to_grid = [0.0]
+
+        for i in range(1,len(time)):
+            e_grid = P_to_grid[i-1] * (time[i]-time[i-1]) # please note the unit of time is min
+            e_grid = e_grid/60.0 # convert MWmin to MWh
+
+            e_acc_grid = e_acc_to_grid[i-1] + e_grid
+            e_acc_to_grid.append(e_acc_grid)
+
+        return e_acc_to_grid
 
     # calculate total energy send to pem system
     def cal_e_acc_h2sys(self,P_to_h2sys,time):
