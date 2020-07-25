@@ -3,7 +3,7 @@
 # File              : eco_analysis.py
 # Author            : tzhang
 # Date              : 26.11.2019
-# Last Modified Date: 23.07.2020
+# Last Modified Date: 24.07.2020
 # Last Modified By  : tzhang
 
 import sys
@@ -1392,7 +1392,7 @@ class sys_eco:
 
 a test class for a hybrid system
 
-"""
+
 sys_cashdic = {}
 sys_lifetime = 10
 comp_1_cashflow = []
@@ -1430,3 +1430,4 @@ sys.cal_NPV(r_discount,r_inflation)
 sys.cal_IRR(r_discount,r_inflation)
 
 print (sys.NPV,sys.IRR)
+"""
