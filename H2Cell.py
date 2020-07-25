@@ -3,7 +3,7 @@
 # File              : H2Cell.py
 # Author            : tzhang
 # Date              : 13.11.2019
-# Last Modified Date: 09.12.2019
+# Last Modified Date: 25.07.2020
 # Last Modified By  : tzhang
 
 """
@@ -533,6 +533,19 @@ class h2_system(h2_module,h2_cluster,h2_storage):
 
         return P_pro, P_con, P_res
 
+    # calculate total energy abondoned, in MWh
+    def cal_e_abandon(self,P_res,time): 
+        e_abandon = [0.0]
+        e_acc_abandon = [0.0]
+        for i in range(1,len(time)):
+            e_ab = P_res[i-1] * (time[i]-time[i-1])  # please note the unit of time is min here
+            e_ab = e_ab/60.0    # convert MWmin to MWh
+            e_ab_acc = e_acc_abandon[i-1] + e_ab
+
+            e_abandon.append(e_ab)
+            e_acc_abandon.append(e_ab_acc)
+
+        return e_abandon, e_acc_abandon
    
     # calculate the power and hydrogen change in current time step
     def cal_curr(self,P_curr,dt):
