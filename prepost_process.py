@@ -149,44 +149,57 @@ class post_process:
         f.close()
 
     # write system performance data to excel file
-    def excel_performance(label,time,P_demand,P_coupled,P_to_grid,P_to_h2sys,P_abandon,m_stored_data):
+    def excel_performance(label,time,P_demand,P_coupled,P_to_grid,P_to_h2sys,P_abandon,e_acc_to_h2sys,e_acc_from_h2sys,e_acc_net_h2sys,e_acc_abandon,m_stored_data):
         datafile = 'data_performance_'+label+'.xlsx'
-        sheetname = 'performance_'+label
+        sheetname1 = 'power_'+label
+        sheetname2 = 'energy_'+label
 
         # remove exists file 
         if os.path.isfile(datafile):
             os.remove(datafile)
 
         # write data to xlsx file
-        df = pd.DataFrame({'time':time,\
+        df1 = pd.DataFrame({'time':time,\
                         'grid demand (MW)':P_demand,\
                         'wind-nuclear generated (MW)': P_coupled,\
                         'power to grid (MW)':P_to_grid,\
                         'power to h2 system (MW)':P_to_h2sys,\
-                        'abandoned power (MW)':P_abandon,\
+                        'abandoned power (MW)':P_abandon})
+        df2 = pd.DataFrame({'time':time,\
+                        'accumulated energy to h2 system (MWh)':e_acc_to_h2sys,\
+                        'accumulated energy from h2 system (MWh)': e_acc_from_h2sys,\
+                        'accumulated net energy to h2 system (MWh)':e_acc_net_h2sys,\
+                        'accumulated abondoned energy (MWh)':e_acc_abandon,\
                         'stored hydrogen (kg)':m_stored_data})
 
         writer = pd.ExcelWriter(datafile, engine='xlsxwriter')
 
-        df.to_excel(writer,sheet_name = sheetname)
+        df1.to_excel(writer,sheet_name = sheetname1)
+        df2.to_excel(writer,sheet_name = sheetname2)
 
         workbook = writer.book
-        worksheet = writer.sheets[sheetname]
+        worksheet1 = writer.sheets[sheetname1]
+        worksheet2 = writer.sheets[sheetname2]
 
         # set format of data
         form1 = workbook.add_format({'num_format':'0.00'})
         form2 = workbook.add_format({'num_format':'0.000'})
 
         # add format
-        worksheet.set_column('B:G',30,form1)
-        worksheet.set_column('H:H',30,form2)
+        worksheet1.set_column('B:G',30,form1)
+
+        worksheet2.set_column('B:F',40,form1)
+        worksheet2.set_column('G:G',30,form2)
 
         writer.save()
 
 
 
     # select data according to time interval, time_interval in unit of minute 
-    def data_opti(time,time_interval,P_demand,P_coupled,P_to_grid,P_to_h2sys,P_abandon,m_stored_data):
+    def data_opti(time,time_interval,\
+            P_demand,P_coupled,P_to_grid,P_to_h2sys,P_abandon,\
+            e_acc_to_h2sys,e_acc_from_h2sys,e_acc_net_h2sys,e_acc_abandon,\
+            m_stored_data):
 
         # select index of requested data
         idx_array = [0]
@@ -205,8 +218,14 @@ class post_process:
         P_abandon_slct = []
         m_stored_data_slct = []
 
+        e_acc_to_h2sys_slct = []
+        e_acc_from_h2sys_slct = []
+        e_acc_net_h2sys_slct = []
+        e_acc_abandon_slct = []
+
         for idx in idx_array:
             time_slct.append(time[idx])
+
             P_demand_slct.append(P_demand[idx])
             P_coupled_slct.append(P_coupled[idx])
             P_to_grid_slct.append(P_to_grid[idx])
@@ -214,7 +233,16 @@ class post_process:
             P_abandon_slct.append(P_abandon[idx])
             m_stored_data_slct.append(m_stored_data[idx])
 
-        return time_slct,P_demand_slct,P_coupled_slct,P_to_grid_slct,P_to_h2sys_slct,P_abandon_slct,m_stored_data_slct
+            e_acc_to_h2sys_slct.append(e_acc_to_h2sys[idx])
+            e_acc_from_h2sys_slct.append(e_acc_from_h2sys[idx])
+            e_acc_net_h2sys_slct.append(e_acc_net_h2sys[idx])
+            e_acc_abandon_slct.append(e_acc_abandon[idx])
+
+        return time_slct,\
+                P_demand_slct,P_coupled_slct,P_to_grid_slct,P_to_h2sys_slct,P_abandon_slct,\
+                e_acc_to_h2sys_slct,e_acc_from_h2sys_slct,e_acc_net_h2sys_slct,e_acc_abandon_slct,\
+                m_stored_data_slct
+
 
 
 
