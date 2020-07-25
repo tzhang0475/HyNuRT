@@ -3,7 +3,7 @@
 # File              : prepost_process.py
 # Author            : tzhang
 # Date              : 25.11.2019
-# Last Modified Date: 25.07.2020
+# Last Modified Date: 26.07.2020
 # Last Modified By  : tzhang
 
 from matplotlib import pyplot as plt
@@ -149,7 +149,7 @@ class post_process:
         f.close()
 
     # write system performance data to excel file
-    def excel_performance(label,time,P_demand,P_coupled,P_to_grid,P_to_h2sys,P_abandon,e_acc_to_h2sys,e_acc_from_h2sys,e_acc_net_h2sys,e_acc_abandon,m_stored_data):
+    def excel_performance(label,time,P_demand,P_coupled,P_to_grid,P_to_h2sys,P_abandon,e_acc_to_grid,e_acc_to_h2sys,e_acc_from_h2sys,e_acc_net_h2sys,e_acc_abandon,m_stored_data):
         datafile = 'data_performance_'+label+'.xlsx'
         sheetname1 = 'power_'+label
         sheetname2 = 'energy_'+label
@@ -166,6 +166,7 @@ class post_process:
                         'power to h2 system (MW)':P_to_h2sys,\
                         'abandoned power (MW)':P_abandon})
         df2 = pd.DataFrame({'time':time,\
+                        'accumulated energy to grid (MWh)':e_acc_to_grid,\
                         'accumulated energy to h2 system (MWh)':e_acc_to_h2sys,\
                         'accumulated energy from h2 system (MWh)': e_acc_from_h2sys,\
                         'accumulated net energy to h2 system (MWh)':e_acc_net_h2sys,\
@@ -182,14 +183,17 @@ class post_process:
         worksheet2 = writer.sheets[sheetname2]
 
         # set format of data
-        form1 = workbook.add_format({'num_format':'0.00'})
-        form2 = workbook.add_format({'num_format':'0.000'})
+        form1 = workbook.add_format({'num_format':'0.0'})
+        form2 = workbook.add_format({'num_format':'0.00'})
+        form3 = workbook.add_format({'num_format':'0.000'})
 
         # add format
-        worksheet1.set_column('B:G',30,form1)
+        worksheet1.set_column('B:B',15,form1)
+        worksheet1.set_column('C:G',30,form2)
 
-        worksheet2.set_column('B:F',40,form1)
-        worksheet2.set_column('G:G',30,form2)
+        worksheet2.set_column('B:B',15,form1)
+        worksheet2.set_column('C:G',40,form2)
+        worksheet2.set_column('H:H',30,form3)
 
         writer.save()
 
@@ -198,7 +202,7 @@ class post_process:
     # select data according to time interval, time_interval in unit of minute 
     def data_opti(time,time_interval,\
             P_demand,P_coupled,P_to_grid,P_to_h2sys,P_abandon,\
-            e_acc_to_h2sys,e_acc_from_h2sys,e_acc_net_h2sys,e_acc_abandon,\
+            e_acc_to_grid,e_acc_to_h2sys,e_acc_from_h2sys,e_acc_net_h2sys,e_acc_abandon,\
             m_stored_data):
 
         # select index of requested data
@@ -218,6 +222,7 @@ class post_process:
         P_abandon_slct = []
         m_stored_data_slct = []
 
+        e_acc_to_grid_slct = []
         e_acc_to_h2sys_slct = []
         e_acc_from_h2sys_slct = []
         e_acc_net_h2sys_slct = []
@@ -233,6 +238,7 @@ class post_process:
             P_abandon_slct.append(P_abandon[idx])
             m_stored_data_slct.append(m_stored_data[idx])
 
+            e_acc_to_grid_slct.append(e_acc_to_grid[idx])
             e_acc_to_h2sys_slct.append(e_acc_to_h2sys[idx])
             e_acc_from_h2sys_slct.append(e_acc_from_h2sys[idx])
             e_acc_net_h2sys_slct.append(e_acc_net_h2sys[idx])
@@ -240,7 +246,7 @@ class post_process:
 
         return time_slct,\
                 P_demand_slct,P_coupled_slct,P_to_grid_slct,P_to_h2sys_slct,P_abandon_slct,\
-                e_acc_to_h2sys_slct,e_acc_from_h2sys_slct,e_acc_net_h2sys_slct,e_acc_abandon_slct,\
+                e_acc_to_grid_slct,e_acc_to_h2sys_slct,e_acc_from_h2sys_slct,e_acc_net_h2sys_slct,e_acc_abandon_slct,\
                 m_stored_data_slct
 
 
