@@ -6,14 +6,7 @@
 # Last Modified Date: 27.07.2020
 # Last Modified By  : tzhang
 
-
-"""
-
-tools used for coupling economic analysis and operation as well as construction and operation plan 
-
-"""
-
-
+        
 """
 
 a module to couple data between system performance and economic analysis
