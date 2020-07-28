@@ -3,7 +3,7 @@
 # File              : eco_analysis.py
 # Author            : tzhang
 # Date              : 26.11.2019
-# Last Modified Date: 24.07.2020
+# Last Modified Date: 29.07.2020
 # Last Modified By  : tzhang
 
 import sys
@@ -85,6 +85,45 @@ class SMR_eco:
         self.NPV = 0.0
         # smr IRR
         self.IRR = 0.0
+
+    # calculate the net cost of from 0 to nth year
+    def cal_cost(self,y_unit_construct,price_e,f_utilization):
+
+        cost = []
+
+        # calculate duration for construction
+        y_construction = y_unit_construct * self.n_unit
+
+        # calculate investment per year
+        occ_year = self.occ/y_construction
+
+        # calculate averaged interest per year
+        idc_year = self.idc/y_construction
+
+        # calculate hours per year, ignore leap year
+        hours = 365*24
+
+        for i in range(self.lifetime+int(y_construction/2)):
+            # the very beginning of the project
+            if i == 0:
+                cashflow.append(0.0)
+            elif i > 0 and i <= y_construction:
+                unit_done = int((i-1)/y_unit_construct)
+
+                cost_year = occ_year + (self.om_unit_year+self.fuel_unit_year+self.dcms_unit_year)*unit_done + idc_year
+
+                cost_year = cost_year/1e6        # convert to million dollar 
+
+                cost.append(cost_year)
+
+            else:
+                cost_year = ((self.om_unit_year+self.fuel_unit_year+self.dcms_unit_year)*self.n_unit)#*(1+r_discount)**i 
+
+                cost_year = cost_year)/1e6        # convert to million dollar 
+
+                cost.append(cost_year)
+
+        return cost
 
     # calculate the net cash flow of from 0 to nth year
     def cal_NCF(self,y_unit_construct,price_e,f_utilization):
@@ -863,6 +902,40 @@ class wind_eco:
         # wind farm IRR
         self.IRR = 0.0
 
+    # calculate year cost under different conditions
+    def cal_cost_year(self,unit_op,unit_con):
+
+        # occ of a wind turbine
+        occ_unit = self._cal_occ_unit_()
+
+        # calculate construction occ of this year
+        cost_con = occ_unit * unit_con
+
+        # calculate operation cost of this year
+        cost_op = (self.om_unit_year+self.dcms_unit_year) * unit_op
+
+        cost_year = (cost_con + cost_op)/1e6    # convert to million dollar
+
+        return cost_year
+
+    # calculate the cost of from 0 to nth year
+    def cal_cost(self):
+
+        cost = []
+
+        for i in range(self.lifetime+1):
+            # the very beginning of the project
+            if i == 0:
+                cost.append(0.0)
+            elif i == 1:
+                cost_year = self.occ/1e6        # convert to million dollar 
+                cost.append(cost_year)
+            else:
+                cost_year = ((self.om_unit_year+self.dcms_unit_year)*self.n_unit)/1e6   # convert to million dollar
+                cost.append(cost_year)
+
+        return cost
+
 
     # calculate the net cash flow of from 0 to nth year
     def cal_NCF(self,price_e,f_inter):
@@ -986,6 +1059,14 @@ class wind_eco:
                 break
 
         self.IRR = self.IRR + IRR
+
+    # calculate the overnight capital cost of the wind turbine
+    def _cal_OCC_unit_(self,cost_kW):
+        
+        # capital cost of a wind turbine
+        occ_unit = cost_kW * self.P_lim * 1000
+
+        return occ_unit
 
 
 
@@ -1170,7 +1251,7 @@ class h2_cost_simple:
 
     # CAPEX of a PEM unit, capex_kw in $/kW
     def cal_CAPEX(self,capex_kw):
-        cost_CAPEX = capex_kw * self.Pmax_unit * self.n_unit
+        cost_CAPEX = capex_kw * self.Pmax_unit 
 
         self.cost_CAPEX = cost_CAPEX
 
@@ -1180,7 +1261,7 @@ class h2_cost_simple:
     def cal_OPEX(self,capex_kw,cap_op_ratio):
         opex_kw = capex_kw * cap_op_ratio
 
-        cost_OPEX = capex_kw * self.Pmax_unit * self.n_unit
+        cost_OPEX = capex_kw * self.Pmax_unit 
 
         self.cost_OPEX = cost_OPEX
 
@@ -1204,6 +1285,48 @@ class h2_cost_simple:
 
         return profit
 
+    # calculate year cost under different conditions
+    def cal_cost_year(self,unit_op,unit_con):
+
+        # calculate construction occ of this year
+        cost_con = self.cost_CAPEX * unit_con
+
+        # calculate operation cost of this year
+        cost_op = self.cost_OPEX * unit_op
+
+        cost_year = (cost_con + cost_op)/1e6    # convert to million dollar
+
+        return cost_year
+
+    # net cost of the PEM from 0 to nth year, year 0 are construction year, no electricy are consumed, cost are accounted in year 1
+    def cal_cost(self, lifetime, energy, price_e):
+        cost = []
+
+        # calculate seconds per year, ignore leap year
+        # seconds = 365*24*60*60
+
+        for i in range(self.lifetime+1):
+            # the very beginning of the project
+            if i == 0:
+                cost.append(0.0)
+            elif i == 1:
+                cost_elec_year = self.cal_cost_elec(price_e[i],energy[i])
+                cost_year = (self.cost_CAPEX + self.cost_OPEX) * self.n_unit + cost_elec_year
+
+                cost_year = cost_year/1e6        # convert to million dollar 
+
+                cost.append(cost_year)
+
+            else:
+                cost_elec_year = self.cal_cost_elec(price_e[i],energy[i])
+                cost_year = self.cost_OPEX * self.n_unit + cost_elec_year
+
+                cost_year = cost_year/1e6        # convert to million dollar 
+
+                cost.append(cost_year)
+
+        return cost
+
     # net cash flow of the PEM from 0 to nth year, year 0 are construction year, no electricy are consumed, cost are accounted in year 1
     def cal_NCF(self, lifetime, energy, price_e, price_h2, production_h2):
         cashflow = []
@@ -1217,7 +1340,7 @@ class h2_cost_simple:
                 cashflow.append(0.0)
             elif i == 1:
                 cost_elec_year = self.cal_cost_elec(price_e[i],energy[i])
-                cost_year = self.cost_CAPEX + self.cost_OPEX + cost_elec_year
+                cost_year = (self.cost_CAPEX + self.cost_OPEX) * self.n_unit + cost_elec_year
                 profit_year = self.profits_H2(price_h2[i],production_h2[i]) 
 
                 cashflow_year = (cashflow[-1] + profit_year - cost_year)/1e6        # convert to million dollar 
@@ -1226,7 +1349,7 @@ class h2_cost_simple:
 
             else:
                 cost_elec_year = self.cal_cost_elec(price_e[i],energy[i])
-                cost_year = self.cost_OPEX + cost_elec_year
+                cost_year = self.cost_OPEX * self.n_unit + cost_elec_year
                 profit_year = self.profits_H2(price_h2[i],production_h2[i]) 
 
                 cashflow_year = (cashflow[-1] + profit_year - cost_year)/1e6        # convert to million dollar 
@@ -1301,7 +1424,7 @@ class sys_eco:
         self.IRR = 0.0
     
     # adjust cashflow according to real construction plan
-    def _con_plan_(self,cashdic):
+    def _flow_adjust_(self,cashdic):
         for i in range(len(cashdic.keys())):
             cashflow = [1.0]*(self.sys_lifetime+1)
             key = list(cashdic)[i]
@@ -1312,16 +1435,46 @@ class sys_eco:
             self.cashflow_comp[key] = cashflow
 
 
-
     # sum up system cash flow
     def cal_cashflow(self,cashdic):
-        self._con_plan_(cashdic)
+        self._flow_adjust_(cashdic)
         print (self.cashflow_comp)
         cashflow = np.zeros(self.sys_lifetime+1)
         for key in self.cashflow_comp.keys():
             cashflow = cashflow + np.asarray(self.cashflow_comp[key],dtype=float)
 
         self.cashflow = cashflow
+
+    # calculate hybrid profit
+    def cal_hybrid_profit(self,lifetime_scale,price_e,price_h2,e_to_grid,m_h2_production):
+
+        profits = []
+
+        for i in range(len(lifetime_scale)):
+
+            # selling electricity profits, e_price $/MWh, e_to_grid MWh
+            e_profits = price_e * e_to_grid
+            # selling hydrogen profits, h2_price $/kg, m_h2_production kg
+            h2_profits = h2_price * m_h2_production
+
+            # total profits of a year 
+            profits_year = e_profits + h2_profits
+
+            profits.append(profits_year)
+
+        return profits
+    # calculate hybrid cost
+    def cal_hybrid_cost(self,lifetime_scale):
+        
+        pass
+
+    # calculate hybrid systme cashflow
+    def cal_hybrid_cashflow(self,lifetime_scale):
+
+        cashflow = []
+
+        for i in range(len(lifetime_scale)):
+            pass
 
     # calculate system LCOE
     def cal_LCOE(self):
