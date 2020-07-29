@@ -3,7 +3,7 @@
 # File              : sys_control.py
 # Author            : tzhang
 # Date              : 24.11.2019
-# Last Modified Date: 29.07.2020
+# Last Modified Date: 30.07.2020
 # Last Modified By  : tzhang
 
 import numpy as np
@@ -256,13 +256,16 @@ class con_plan(sys_config):
 
         lifetime_scale = []
         
+        name_idx = []
         # add index to column
-        lifetime_scale.append('year')
+        name_idx.append('year')
         
         for comp in self.sys_scale[0]:
-            lifetime_scale.append(comp)
-        lifetime_scale.append('capacity')
-        lifetime_scale.append('capacity ratio')
+            name_idx.append(comp)
+        name_idx.append('capacity')
+        name_idx.append('capacity ratio')
+        
+        lifetime_scale.append(name_idx)
 
         for i in range (self.lifetime + int(y_construction/2)):
 #        for i in range (y_construction+2):
