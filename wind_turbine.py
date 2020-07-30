@@ -3,7 +3,7 @@
 # File              : wind_turbine.py
 # Author            : tzhang
 # Date              : 28.10.2019
-# Last Modified Date: 24.07.2020
+# Last Modified Date: 30.07.2020
 # Last Modified By  : tzhang
 
 import math
@@ -234,9 +234,46 @@ class wind_farm:
             energy_output = energy_output + energy
 
         # calculate intermittence factor
-        f_inter = energy_output/energy_lim
+        if energy_lim == 0.0:
+            f_inter = 0.0
+        else:
+            f_inter = energy_output/energy_lim
 
         return f_inter
+
+    # calculate wind farm intermittence factor array of system lifetime
+    def cal_f_inter_array(lifetime_scale,cases,case_data):
+        f_inter_array = []
+        
+        for data in lifetime_scale[1:]:
+            sys_data = data[1:]
+            if sum(sys_data) == 0.0:
+                f_inter = 0.0
+                f_inter_array.append(f_inter)
+            else:
+                idx = cases.index(sys_data)
+                f_inter = case_data[idx-1][-1]
+                f_inter_array.append(f_inter)
+        
+        return f_inter_array
+
+
+    # calculate lifetime average  wind farm intermittence factor
+    def cal_f_inter_ave(f_inter_array):
+
+        num_year = 0.
+        sum_f = 0.0
+
+        for i in range(len(f_inter_array)):
+
+            if f_inter_array != 0.0:
+                sum_f = sum_f + f_inter_array[i]
+                num_year = num_year + 1.
+
+        f_inter_ave = sum_f/num_year
+
+        return f_inter_ave
+
 
 
     # plot wind farm output power
