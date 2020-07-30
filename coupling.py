@@ -14,11 +14,11 @@ a module to couple data between system performance and economic analysis
 
 """
 class cp:
-    def __init__(self):
-        self.r_scale = 0.0
+#    def __init__(self):
+#        pass
 
     # a module to transfer period performance data to comparable annular performance data
-    def timescale_trans(self,time):
+    def time_scale_trans(time):
         # min in a year, neglect leap year
         min_year = 365 * 24 * 60
 
@@ -26,12 +26,12 @@ class cp:
         time_cal = time[-1]
 
         # ratio between calculated time and annular time
-        r_scale = min_year/time_cal
+        t_scale = min_year/time_cal
 
-        self.r_scale = r_scale
+        return t_scale
 
     # obtain component name in the system
-    def get_comp_name(self,sys_config):
+    def get_comp_name(sys_config):
         name_comp = []
         for key in sys_config.keys():
             name_comp.append(key)
@@ -39,7 +39,7 @@ class cp:
         return name_comp
 
     # obtain component char number in the system
-    def get_comp_char(self,sys_config):
+    def get_comp_char(sys_config):
         num_char = []
         for key in sys_config.keys():
             num_char.append(sys_config[key][0])
@@ -47,7 +47,7 @@ class cp:
         return num_char
 
     # create class mapping of economic modules
-    def mapping_eco(self,sys_config,smr_eco=None,wfarm_eco=None,PV_eco=None,PEM_eco=None):
+    def mapping_eco(sys_config,smr_eco=None,wfarm_eco=None,PV_eco=None,PEM_eco=None):
         post_char = "_eco"
 
         name_comp = self.get_comp_name(sys_config)
@@ -76,5 +76,62 @@ class cp:
         return eco_map
 
 
+    # calculating scales to be calculate in the lifetime of the system
+    def case_to_cal(lifetime_scale):
+        cases = []
+        # add case index
+        cases.append(lifetime_scale[0][1:])
 
-    # a module calculating 
+        for i in range(1,len(lifetime_scale)):
+            scale_data = lifetime_scale[i][1:]
+            sum_data = sum(scale_data)
+            if scale_data not in cases and sum_data != 0.0:
+                cases.append(scale_data)
+            else:
+                pass
+
+        return cases
+
+    # obtain data from performance model to economic model
+    def model_cp_data(e_to_grid_array,e_to_h2_array,m_h2_array):
+        dataflow = []
+
+        # total electricity to grid, in MWh
+        e_to_grid = e_to_grid_array[-1]
+        # total electricity to pem, in MWh
+        e_to_h2 = e_to_h2_array[-1]
+        # total h2 produced, in kg
+        m_h2 = m_h2_array[-1]
+
+        # merge to data array
+        dataflow.append(e_to_grid)
+        dataflow.append(e_to_h2)
+        dataflow.append(m_h2)
+    
+        return dataflow
+
+    # rescale data to annual data according to time
+    def data_scale(dataflow,t_scale):
+        dataflow_new = []
+        
+        for data in dataflow:
+            data_new = data * t_scale
+            dataflow_new.append(data_new)
+
+        return dataflow_new
+
+    # convert case data to lifetime data
+    def case_lifetime_convert(lifetime_scale,cases,case_data):
+        case_lifetime = []
+        
+        for data in lifetime_scale[1:]:
+            sys_data = data[1:]
+            if sum(sys_data) == 0.0:
+                data_flow = [0.0,0.0,0.0,0.0]
+                case_lifetime.append(data_flow)
+            else:
+                idx = cases.index(sys_data)
+                data_flow = case_data[idx-1]
+                case_lifetime.append(data_flow)
+        
+        return case_lifetime

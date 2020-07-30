@@ -3,7 +3,7 @@
 # File              : grid.py
 # Author            : tzhang
 # Date              : 18.11.2019
-# Last Modified Date: 21.11.2019
+# Last Modified Date: 30.07.2020
 # Last Modified By  : tzhang
 import csv
 from datetime import datetime as dtCal
@@ -124,6 +124,11 @@ class grid:
     # aquire demand data
     def aquire_demand(self):
         return self.demand
+
+    # aquire demand data as numpy array
+    def aquire_demand_array(self):
+        P_demand = np.asarray(self.demand,dtype = float)
+        return P_demand
 
     # plot user defined grid demand data
     def user_demand_plot(self,time,demand):
