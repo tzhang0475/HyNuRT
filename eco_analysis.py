@@ -3,12 +3,13 @@
 # File              : eco_analysis.py
 # Author            : tzhang
 # Date              : 26.11.2019
-# Last Modified Date: 30.07.2020
+# Last Modified Date: 31.07.2020
 # Last Modified By  : tzhang
 
 import sys
 import numpy as np
 import math
+import importlib.util
 
 
 # use a tool to calculation inflation, written by 'Los Angeles Times Data and Graphics Department', the project is on GitHub, details see: https://github.com/datadesk/cpi
@@ -974,7 +975,7 @@ class wind_eco:
 
             else:
                 cost_year = ((self.om_unit_year+self.dcms_unit_year)*self.n_unit)
-                production_year = ((self.P_lim*self.n_unit*hours*f_inter) * price_e)
+                production_year = ((self.P_lim*self.n_unit*hours*f_inter[i]) * price_e)
 
                 cashflow_year = (cashflow[-1]*1e6 + production_year - cost_year)/1e6        # convert to million dollar 
 
@@ -1006,7 +1007,7 @@ class wind_eco:
 
             else:
                 cost_year = ((self.om_unit_year+self.dcms_unit_year)*self.n_unit)/(1+r_discount)**i 
-                production_year = (self.P_lim*self.n_unit*hours*f_inter)/(1+r_discount)**i
+                production_year = (self.P_lim*self.n_unit*hours*f_inter[i])/(1+r_discount)**i
 
                 cost = cost + cost_year
                 production = production + production_year
@@ -1084,7 +1085,6 @@ class wind_eco:
         return occ_unit
 
 
-
     # calculate the overnight capital cost of the wind farm
     def cal_OCC(self,cost_kW):
         
@@ -1097,11 +1097,11 @@ class wind_eco:
         self.occ = self.occ + occ
 
     # calculate the o&m cost per year
-    def cal_OM_unit(self,om_cost_MWh,f_inter):
+    def cal_OM_unit(self,om_cost_MWh,f_inter_ave):
         # calculate hours per year, ignore leap year
         hours = 365*24
         # elecectricity produced per unit per year
-        P_MWh = self.P_lim * hours * f_inter 
+        P_MWh = self.P_lim * hours * f_inter_ave 
 
         # calculate O&M cost per unit per year
         om_unit_year = om_cost_MWh * P_MWh
@@ -1109,11 +1109,11 @@ class wind_eco:
         self.om_unit_year = self.om_unit_year + om_unit_year
 
     # calculate the decommissioning cost per unit per year
-    def cal_decommissioning_unit(self,dcms_cost_MWh,f_inter):
+    def cal_decommissioning_unit(self,dcms_cost_MWh,f_inter_ave):
         # calculate hours per year, ignore leap year
         hours = 365*24
         # elecectricity produced per unit per year
-        P_MWh = self.P_lim * hours * f_inter
+        P_MWh = self.P_lim * hours * f_inter_ave
 
         # calculate O&M cost per unit per year
         dcms_unit_year = dcms_cost_MWh * P_MWh
@@ -1152,15 +1152,15 @@ w_om_cost_MWh = 14.4
 w_dcms_cost_MWh = 4.0
 
 # wind farm intermittence factor
-f_inter = 0.3
+f_inter_ave = 0.3
 
 
 wfarm = wind_eco(P_lim,w_n_unit,w_lifetime)
 wfarm.cal_OCC(cost_kW)
 print ('total wind farm capital cost: ', wfarm.occ)
-wfarm.cal_OM_unit(w_om_cost_MWh,f_inter)
+wfarm.cal_OM_unit(w_om_cost_MWh,f_inter_ave)
 print ('om cost of per turbine per year: ', wfarm.om_unit_year)
-wfarm.cal_decommissioning_unit(dcms_cost_MWh,f_inter)
+wfarm.cal_decommissioning_unit(dcms_cost_MWh,f_inter_ave)
 print ('decommissioning cost per turbine per year: ',smr.dcms_unit_year)
 
 wfarm.cal_NCF(price_e,f_inter)
@@ -1278,7 +1278,7 @@ class h2_cost_simple:
     def cal_OPEX(self,capex_kw,cap_op_ratio):
         opex_kw = capex_kw * cap_op_ratio
 
-        cost_OPEX = capex_kw * self.Pmax_unit 
+        cost_OPEX = opex_kw * self.Pmax_unit 
 
         self.cost_OPEX = cost_OPEX
 
@@ -1303,7 +1303,7 @@ class h2_cost_simple:
         return profit
 
     # calculate year cost under different conditions
-    def cal_cost_year(self,unit_op,unit_con):
+    def cal_cost_year(self,unit_op,unit_con,price_ePEM,e_to_h2):
 
         # calculate construction occ of this year
         cost_con = self.cost_CAPEX * unit_con
@@ -1311,7 +1311,11 @@ class h2_cost_simple:
         # calculate operation cost of this year
         cost_op = self.cost_OPEX * unit_op
 
-        cost_year = (cost_con + cost_op)/1e6    # convert to million dollar
+        # calculate electricity cost
+        cost_elec = price_ePEM * e_to_h2
+
+
+        cost_year = (cost_con + cost_op + cost_elec)/1e6    # convert to million dollar
 
         return cost_year
 
@@ -1417,10 +1421,9 @@ an economic model for a hybrid system
 """
 from sys_control import *
 
-class system_eco(sys_config):
-    def __init__(self,sys_config):
-        super().__init__(components,num_chars,unit_power,n_units,lifetimes,con_time,sys_lifetime)
-
+class system_eco:
+    def __init__(self):
+        #super().__init__(components,num_chars,unit_power,n_units,lifetimes,con_time,sys_lifetime)
         # economic parameters
 
         # system annually cost
@@ -1446,14 +1449,14 @@ class system_eco(sys_config):
 #            cashflow[(self.year_start[i]-1):(self.year_start[i]+len(cashdic[key]))] = cashdic[key]
             for n in range(len(cashdic[key])):
                 cashflow[self.year_start[i]-1+n] = cashdic[key][n]
-            print (cashflow)
+
             self.cashflow_comp[key] = cashflow
 
 
     # sum up system cash flow
     def cal_cashflow(self,cashdic):
         self._flow_adjust_(cashdic)
-        print (self.cashflow_comp)
+
         cashflow = np.zeros(self.sys_lifetime+1)
         for key in self.cashflow_comp.keys():
             cashflow = cashflow + np.asarray(self.cashflow_comp[key],dtype=float)
@@ -1463,28 +1466,27 @@ class system_eco(sys_config):
     # calculate hybrid profit
     def _cal_hybrid_profit_(self,lifetime_scale,price_e,price_h2,e_to_grid,m_h2_production):
 
-        profits = []
+        profit = []
 
-        for i in range(len(lifetime_scale)):
+        for i in range(len(lifetime_scale)-1):
 
             # selling electricity profits, e_price $/MWh, e_to_grid MWh
-            e_profits = price_e * e_to_grid
+            e_profit = price_e[i] * e_to_grid[i]
             # selling hydrogen profits, h2_price $/kg, m_h2_production kg
-            h2_profits = h2_price * m_h2_production
+            h2_profit = price_h2[i] * m_h2_production[i]
 
             # total profits of a year 
-            profits_year = e_profits + h2_profits
+            profit_year = (e_profit + h2_profit)/1e6    # convert to million dollar
 
-            profits.append(profits_year)
+            profit.append(profit_year)
 
-        return profits
+        self.profit = profit
+
     
     # calculate hybrid cost
-    def _cal_hybrid_cost_(self,lifetime_scale,eco_pack):
+    def _cal_hybrid_cost_(self,lifetime_scale,eco_pack,price_ePEM,e_to_h2):
 
         cost = []
-
-        char_num = []
 
         for char in lifetime_scale[0]:
             if char == '00':
@@ -1498,44 +1500,57 @@ class system_eco(sys_config):
        
         for i in range(1,len(lifetime_scale)):
             year = lifetime_scale[i][0]
+
+            cost_npp = 0.0
+            cost_wfarm = 0.0
+            cost_PV = 0.0
+            cost_pem = 0.0
+
             for data in eco_pack:
-                if data == smr_eco:
+                
+                if data.get('00'):
                     npp_unit_done = lifetime_scale[i][col_npp]
-                    cost_npp = smr_eco.cal_cost_year(npp_unit_done,year)
-                    print (cost_npp)
-                elif data == wfarm_eco:
+                    cost_npp = data['00'].cal_cost_year(npp_unit_done,year)
+                elif data.get ('01'):
                     wfarm_unit_op = int(lifetime_scale[i][col_wind])
                     if year == 0:
                         wfarm_unit_con = 0
                     else:
                         wfarm_unit_con = wfarm_unit_op - int(lifetime_scale[i-1][col_wind])
-                    cost_wfarm = wfarm_eco.cal_cost_year(wfarm_unit_op,wfarm_unit_con)
-                    print (cost_wfarm)
+                    cost_wfarm = data['01'].cal_cost_year(wfarm_unit_op,wfarm_unit_con)
                 elif data == 'PV_eco':
                     print ('model under development')
-                elif data == PEM_eco:
+                elif data.get('10'):
                     pem_unit_op = int(lifetime_scale[i][col_pem])
                     if year == 0:
                         pem_unit_con = 0
                     else:
                         pem_unit_con = int(pem_unit_op) - int(lifetime_scale[i-1][col_pem])
-                    cost_pem = PEM_eco.cal_cost_year(pem_unit_op,pem_unit_con)
-                    print (cost_pem)
 
-            cost_year = -(cost_npp + cost_wfarm + cost_pem)
+                    cost_pem = data['10'].cal_cost_year(pem_unit_op,pem_unit_con,price_ePEM[i-1],e_to_h2[i-1])
+
+            cost_year = -(cost_npp + cost_wfarm + cost_PV +cost_pem)
 
             cost.append(cost_year)
            
         self.cost = cost
-        print (cost)
 
     # calculate hybrid systme cashflow
-    def cal_hybrid_cashflow(self,lifetime_scale):
+    def cal_hybrid_cashflow(self,lifetime_scale,eco_pack,price_e,price_ePEM,price_h2,e_to_grid,e_to_h2,m_h2):
 
         cashflow = []
 
-        for i in range(len(lifetime_scale)):
-            pass
+        self._cal_hybrid_profit_(lifetime_scale,price_e,price_h2,e_to_grid,m_h2)
+        self._cal_hybrid_cost_(lifetime_scale,eco_pack,price_ePEM,e_to_h2)
+
+        for i in range(len(lifetime_scale)-1):
+            if i == 0:
+                cashflow_year = 0.0
+            else:
+                cashflow_year = cashflow[i-1]+ self.profit[i] + self.cost[i]
+            cashflow.append(cashflow_year)
+        
+        self.cashflow = cashflow
 
     # calculate system LCOE
     def cal_LCOE(self):
@@ -1606,7 +1621,6 @@ class system_eco(sys_config):
 
 a test class for a hybrid system
 
-"""
 from coupling import *
 
 components = ['SMR','wind','PEM','storage']
@@ -1732,7 +1746,11 @@ eco_map = cp().mapping_eco(system.config,smr_eco,wfarm_eco,PEM_eco)
 
 sys_eco = system_eco(system)
 
-sys_eco._cal_hybrid_cost_(sys_con.lifetime_scale,eco_pack)
+sys_eco._cal_hybrid_cost_(sys_con.lifetime_scale,eco_map)
+
+"""
+
+
 """
 # non-hybrid model
 sys_cashdic = {}

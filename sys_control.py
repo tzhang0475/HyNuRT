@@ -3,7 +3,7 @@
 # File              : sys_control.py
 # Author            : tzhang
 # Date              : 24.11.2019
-# Last Modified Date: 30.07.2020
+# Last Modified Date: 31.07.2020
 # Last Modified By  : tzhang
 
 import numpy as np
@@ -56,7 +56,6 @@ class sys_config:
 
 a test module 
 
-"""
 
 components = ['SMR','wind','PEM','storage']
 num_chars = ['00','01','10','20']
@@ -71,6 +70,7 @@ system = sys_config(components,num_chars,unit_power,n_units,lifetimes,con_time,s
 
 
 """
+"""
 
 a module account for operating units of each components in lifetime according to construction plan
 auto_con:
@@ -79,9 +79,8 @@ auto_con:
 
 """
 class con_plan(sys_config):
-    def __init__(self,sys_config,con_time):
+    def __init__(self,components,num_chars,unit_power,n_units,lifetimes,con_time,sys_lifetime):
         super().__init__(components,num_chars,unit_power,n_units,lifetimes,con_time,sys_lifetime)
-        self.con_time = con_time    # times needed to construct for each component, in year
         self.sys_scale = []         # array for system scaling data
         self.lifetime_scale = []      # array of construciton and operation schedule
         
@@ -290,7 +289,6 @@ class con_plan(sys_config):
 
 a test module 
 
-"""
 auto_con = 1
 sys_con = con_plan(system,con_time)
 
@@ -299,6 +297,7 @@ sys_con.con_schedule(auto_con)
 print (sys_con.lifetime_scale)
 
 
+"""
 
 """
 
@@ -333,7 +332,7 @@ class balancing:
     def _dP_cal_(self,P_coupled,P_demand):
         dP = P_coupled - P_demand
         dP = list(dP)
-        print (dP)
+       # print (dP)
         self.dP = dP
 
     # calculate the power to hydrogen system if residual power is larger than the minimum opearion demand
@@ -365,8 +364,8 @@ class balancing:
         e_acc_to_grid = [0.0]
 
         for i in range(1,len(time)):
-            e_grid = P_to_grid[i-1] * (time[i]-time[i-1]) # please note the unit of time is min
-            e_grid = e_grid/60.0 # convert MWmin to MWh
+            e_grid = P_to_grid[i-1] * (time[i]-time[i-1]) * 60 # power produced in the period, MWs
+            e_grid = e_grid/3600.0 # convert to MWh
 
             e_acc_grid = e_acc_to_grid[i-1] + e_grid
             e_acc_to_grid.append(e_acc_grid)
@@ -380,8 +379,8 @@ class balancing:
         e_acc_net_h2sys = [0.0]
 
         for i in range(1,len(time)):
-            e_h2 = P_to_h2sys[i-1] * (time[i]-time[i-1])  # please note the unit of time is min here
-            e_h2 = e_h2/60.0    # convert MWmin to MWh
+            e_h2 = P_to_h2sys[i-1] * (time[i]-time[i-1]) * 60  # please note the unit of time is min here
+            e_h2 = e_h2/3600.0    # convert MWmin to MWh
             if e_h2 > 0:
                 e_acc_h2 = e_acc_to_h2sys[i-1] + e_h2
                 e_acc_to_h2sys.append(e_acc_h2)

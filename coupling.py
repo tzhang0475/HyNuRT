@@ -3,7 +3,7 @@
 # File              : coupling.py
 # Author            : tzhang
 # Date              : 27.07.2020
-# Last Modified Date: 30.07.2020
+# Last Modified Date: 31.07.2020
 # Last Modified By  : tzhang
 
 #from eco_analysis import *
@@ -50,8 +50,8 @@ class cp:
     def mapping_eco(sys_config,smr_eco=None,wfarm_eco=None,PV_eco=None,PEM_eco=None):
         post_char = "_eco"
 
-        name_comp = self.get_comp_name(sys_config)
-        num_char = self.get_comp_char(sys_config)
+        name_comp = cp.get_comp_name(sys_config)
+        num_char = cp.get_comp_char(sys_config)
 
         eco_map = []
         for i in range(len(name_comp)):
@@ -135,3 +135,47 @@ class cp:
                 case_lifetime.append(data_flow)
         
         return case_lifetime
+
+    # creat array for electricity price to grid, electricity price to h2, h2_price with constant base value
+    def cal_price_array(lifetime_scale,price_e_base,price_ePEM_base,price_h2_base,e_inflation=None,ePEM_fluctuation=None,h2_fluctuation=None):
+
+        # check if price model exsits
+        if e_inflation == None:
+            e_inflation = 1.0
+
+        if ePEM_fluctuation == None:
+            ePEM_fluctuation = 1.0
+
+        if h2_fluctuation == None:
+            h2_fluctuation = 1.0
+
+        price_e = []
+        price_ePEM = []
+        price_h2 = []
+
+        for i in range(1,len(lifetime_scale)):
+            price_e_year = price_e_base * e_inflation**(i-1)
+            price_ePEM_year = price_ePEM_base * ePEM_fluctuation**(i-1)
+            price_h2_year = price_h2_base * h2_fluctuation**(i-1)
+            
+            price_e.append(price_e_year)
+            price_ePEM.append(price_ePEM_year)
+            price_h2.append(price_h2_year)
+
+
+        return price_e,price_ePEM,price_h2
+
+    # calculate array for energy coupling
+    def cal_energy_array(case_lifetime):
+
+        e_to_grid = []
+        e_to_h2 = []
+        m_h2 = []
+
+        for i in range(len(case_lifetime)):
+            e_to_grid.append(case_lifetime[i][0])
+            e_to_h2.append(case_lifetime[i][1])
+            m_h2.append(case_lifetime[i][2])
+
+        return e_to_grid,e_to_h2,m_h2
+
