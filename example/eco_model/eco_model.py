@@ -3,7 +3,7 @@
 # File              : eco_model.py
 # Author            : tzhang
 # Date              : 29.07.2020
-# Last Modified Date: 30.07.2020
+# Last Modified Date: 01.08.2020
 # Last Modified By  : tzhang
 
 import sys
@@ -59,8 +59,8 @@ a test class for SMR_eco
 
 """
 sub_sys1 = 'smr'
-P_unit = 50             #electrical power in MW
-n_unit = 4
+P_unit = 60             #electrical power in MW
+n_unit = 6
 year = 2018
 FOAK = 1
 lifetime = 60           # life time the npp
@@ -106,7 +106,6 @@ r_learning = 0.04
 smr = nuclear_eco(P_unit,n_unit,year,lifetime,y_unit_construct,FOAK)
 classmap={'smr_eco':smr,'smr_eco2':smr}
 ME_2_curr,ME_9_curr = smr.import_coa()
-classmap['smr_eco2'].cal_OCC(ME_2_curr,ME_9_curr,eta_direct,eta_indirect,x,y,z,k,r_learning)
 
 coa = coa_pwr12()
 cost_kW_pwr12 = coa.aquire_cost_kW(ME_2_curr,ME_9_curr)
@@ -126,6 +125,7 @@ print ('decommissioning cost per unit per year: ',smr.dcms_unit_year)
 
 smr.cal_NCF(price_e,f_uti)
 cashflow = smr.cashflow
+print ('net cass flow of smr',cashflow)
 
 smr.cal_LCOE(r_discount,price_e,f_uti)
 print ('smr levelized cost of electricity: ',smr.LCOE, ' $/MWh')
@@ -150,7 +150,7 @@ P_lim = 2           # in MW
 w_n_unit = 40   
 w_lifetime = 30     # 30 years life time
 loc_type = 1        # 1 for land wind farm, 0 for off-shore wind farm
-
+w_con_time = 1
 # discount rate 
 r_discount = 0.05
 # inflation rate
@@ -172,15 +172,16 @@ w_om_cost_MWh = 14.4
 w_dcms_cost_MWh = 4.0
 
 # wind farm intermittence factor
-f_inter = 0.3
+f_inter = [0.5] * (w_lifetime + 1)
+f_inter_ave = 0.5
 
 
-wfarm = wind_eco(P_lim,w_n_unit,w_lifetime)
+wfarm = wind_eco(P_lim,w_n_unit,w_lifetime,w_con_time)
 wfarm.cal_OCC(cost_kW)
 print ('total wind farm capital cost: ', wfarm.occ)
-wfarm.cal_OM_unit(w_om_cost_MWh,f_inter)
+wfarm.cal_OM_unit(w_om_cost_MWh,f_inter_ave)
 print ('om cost of per turbine per year: ', wfarm.om_unit_year)
-wfarm.cal_decommissioning_unit(dcms_cost_MWh,f_inter)
+wfarm.cal_decommissioning_unit(dcms_cost_MWh,f_inter_ave)
 print ('decommissioning cost per turbine per year: ',smr.dcms_unit_year)
 
 wfarm.cal_NCF(price_e,f_inter)
@@ -208,6 +209,8 @@ a test class for h2sys_eco
 Pmax_unit = 0.5     # maximum power of a unit
 n_unit = 10         # number of units
 
+h2_con_time = 1
+
 capex_kw = 1400     # capital cost per kW
 
 cap_op_ratio = 0.02 # capital cost operational cost ratio
@@ -222,7 +225,7 @@ production_h2 = [0,6000,6000,6000,6000,6000]    # production in kg of each year 
 lifetime = 5
 
 # calculate PEM cost and profit
-PEM_eco = h2_cost_simple(Pmax_unit,n_unit,lifetime)
+PEM_eco = h2_cost_simple(Pmax_unit,n_unit,lifetime,h2_con_time)
 
 cost_CAPEX = PEM_eco.cal_CAPEX(capex_kw)
 cost_OPEX = PEM_eco.cal_OPEX(capex_kw,cap_op_ratio)

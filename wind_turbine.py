@@ -3,12 +3,11 @@
 # File              : wind_turbine.py
 # Author            : tzhang
 # Date              : 28.10.2019
-# Last Modified Date: 30.07.2020
+# Last Modified Date: 31.07.2020
 # Last Modified By  : tzhang
 
 import math
 import numpy as np
-import turbine_data
 from matplotlib import pyplot as plt
 
 """
