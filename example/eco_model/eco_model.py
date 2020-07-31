@@ -3,7 +3,7 @@
 # File              : eco_model.py
 # Author            : tzhang
 # Date              : 29.07.2020
-# Last Modified Date: 29.07.2020
+# Last Modified Date: 30.07.2020
 # Last Modified By  : tzhang
 
 import sys
@@ -12,7 +12,6 @@ import sys
 sys.path.insert(1, '../../')
 
 from eco_analysis import *
-
 """
 
 a test class for coa_pwr12
@@ -104,9 +103,10 @@ r_learning = 0.04
 
 
 
-smr = SMR_eco(P_unit,n_unit,year,lifetime,y_unit_construct,FOAK)
-
+smr = nuclear_eco(P_unit,n_unit,year,lifetime,y_unit_construct,FOAK)
+classmap={'smr_eco':smr,'smr_eco2':smr}
 ME_2_curr,ME_9_curr = smr.import_coa()
+classmap['smr_eco2'].cal_OCC(ME_2_curr,ME_9_curr,eta_direct,eta_indirect,x,y,z,k,r_learning)
 
 coa = coa_pwr12()
 cost_kW_pwr12 = coa.aquire_cost_kW(ME_2_curr,ME_9_curr)
@@ -115,7 +115,7 @@ print ('PWR12 cost per kW: ', cost_kW_pwr12)
 smr.cal_OCC(ME_2_curr,ME_9_curr,eta_direct,eta_indirect,x,y,z,k,r_learning)
 print ('total cost of the NPP: ', '%.9e'%smr.occ)
 print ('total cost of the NPP per kW: ', smr.occ_kW)
-smr.cal_IDC(r_discount,y_unit_construct)
+smr.cal_IDC(r_discount)
 print ('total interest to pay: ', smr.idc)
 smr.cal_OM_unit(om_cost_MWh,f_uti)
 print ('O&M cost per unit per year: ',smr.om_unit_year)
@@ -127,7 +127,7 @@ print ('decommissioning cost per unit per year: ',smr.dcms_unit_year)
 smr.cal_NCF(price_e,f_uti)
 cashflow = smr.cashflow
 
-smr.cal_LCOE(r_discount,y_unit_construct,price_e,f_uti)
+smr.cal_LCOE(r_discount,price_e,f_uti)
 print ('smr levelized cost of electricity: ',smr.LCOE, ' $/MWh')
 
 y_tot = lifetime+int((y_unit_construct*n_unit)/2)
