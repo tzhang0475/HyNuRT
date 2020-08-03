@@ -3,7 +3,7 @@
 # File              : prepost_process.py
 # Author            : tzhang
 # Date              : 25.11.2019
-# Last Modified Date: 31.07.2020
+# Last Modified Date: 03.08.2020
 # Last Modified By  : tzhang
 
 from matplotlib import pyplot as plt
@@ -30,7 +30,7 @@ a tool for post-process
 class post_process:
 
     # plot the grid demand and the system generatrion
-    def plt_grid_balance(time,P_demand,P_to_grid):
+    def plt_grid_balance(label,time,P_demand,P_to_grid):
         plt.figure(figsize = (12,8))
         plt.plot(time,P_demand, color = 'g',label = 'grid demand')
         plt.plot(time,P_to_grid, color = 'b', label = 'system deliver')
@@ -40,11 +40,11 @@ class post_process:
         plt.ylabel('Power (MW)', fontsize = '16')
         plt.grid(linestyle='--',linewidth = '1')
 
-        pltName = 'grid_blance.png'
+        pltName = 'grid_blance_'+label+'.png'
         plt.savefig(pltName,dpi = 100)
 
     # plot the stored mass of hydrogen
-    def plt_h2_stored(time,m_stored_data):
+    def plt_h2_stored(label,time,m_stored_data):
         plt.figure(figsize = (12,8))
         plt.plot(time,m_stored_data[0:-1], color = 'k')
         plt.xlabel('Time (min)',fontsize = '16')
@@ -52,12 +52,12 @@ class post_process:
         plt.ylabel('Hydrogen Storage (kg)', fontsize = '16')
         plt.grid(linestyle='--',linewidth = '1')
 
-        pltName = 'hydrogen_storage.png'
+        pltName = 'hydrogen_storage'+'_'+label+'.png'
         plt.savefig(pltName,dpi = 100)
 
 
     # plot the abandoned power 
-    def plt_power_abandon(time,P_abandon):
+    def plt_power_abandon(label,time,P_abandon):
         plt.figure(figsize = (12,8))
         plt.plot(time,P_abandon, color = 'c')
         plt.xlabel('Time (min)',fontsize = '16')
@@ -65,11 +65,11 @@ class post_process:
         plt.ylabel('Power (MW)', fontsize = '16')
         plt.grid(linestyle='--',linewidth = '1')
 
-        pltName = 'power_abondoned.png'
+        pltName = 'power_abondoned'+label+'.png'
         plt.savefig(pltName,dpi = 100)
 
     # plot cash flow of a unit n years
-    def plt_cashflow(n_year,cashflow,system):
+    def plt_cashflow(n_year,cashflow,label):
         
         year = np.arange(0,n_year,1) 
 
@@ -80,10 +80,10 @@ class post_process:
         plt.ylabel('Cash Flow ($ in Million)', fontsize = '16')
         plt.grid(linestyle='--',linewidth = '1')
 
-        pltName = system+'_'+'cashflow.png'
+        pltName = label+'_'+'cashflow.png'
         plt.savefig(pltName,dpi = 100)
 
-    # plot cash flow of a system with n units and cash flow of each unit in the system
+    # plot cash flow of a system with n components and cash flow of each unit in the system
     def plt_sys_cashflow(n_year,cashflow,cashdic):
 
         year = np.arange(0,n-year,1)
@@ -104,21 +104,17 @@ class post_process:
 
 
     # cash flow data writer
-    def data_cashflow(cashflow, cashdic):
+    def writer_cashflow(cashflow,label):
         
-        datafile = 'data_cashflow.txt'
+        datafile = 'cashflow_'+label+'.txt'
 
         with open(datafile,"w+") as f:
-            f.write('year'+'    '+'system'+'    ')
-            for key in cashdic.keys():
-                f.write(key+'   ')
+            f.write('#year'+'    '+'cash flow'+'    ')
             f.write('\n')
-
+            
             for i in range(len(cashflow)):
                 f.write(str(i)+'    ')
                 f.write(str(cashflow[i])+'      ')
-                for key in cashdic.keys():
-                    f.write(cashdic[key][i]+'       ')
                 f.write('\n')
         f.close()
 
@@ -197,6 +193,92 @@ class post_process:
 
         writer.save()
 
+    # write lifetime performance data to excel file
+    def excel_lifetime(lifetime_scale,e_to_grid,e_to_h2,e_ab,m_h2):
+        datafile = 'system_lifetime_performance.xlsx'
+        sheetname = 'performance'
+
+        npp_switch = False
+        wind_switch = False
+        PV_switch = False
+        PEM_switch = False
+
+        # remove exists file 
+        if os.path.isfile(datafile):
+            os.remove(datafile)
+
+        year = []
+        capacity = []
+
+        for data in lifetime_scale[0]:
+            if data == '00':
+                npp = []
+                col_npp = lifetime_scale[0].index(data)
+                npp_switch = True
+            elif data == '01':
+                wind = []
+                col_wind = lifetime_scale[0].index(data)
+                wind_switch = True
+            elif data == '02':
+                PV = []
+                col_PV = lifetime_scale[0].index(data)
+                PV_switch = True
+            elif data == '10':
+                PEM = []
+                col_PEM = lifetime_scale[0].index(data)
+                PEM_switch = True
+
+        for data in lifetime_scale[1:]:
+            year.append(data[0])
+            if npp_switch:
+                npp.append(data[col_npp])
+            if wind_switch:
+                wind.append(data[col_wind])
+            if PV_switch:
+                PV.append(data[col_PV])
+            if PEM_switch:
+                PEM.append(data[col_PEM])
+            capacity.append(data[-2])
+
+        df = pd.DataFrame({'year':year})
+
+        if npp_switch:
+            df['NPP units'] = npp
+        if wind_switch:
+            df['wind farm units'] = wind
+        if PV_switch:
+            df['photovoltage units'] = PV
+        if PEM_switch:
+            df['PEM units'] = PEM
+        
+        df['installed capacity'] = capacity
+
+        df['energy to grid (MWh)'] = e_to_grid 
+        df['energy to h2 system (MWh)'] = e_to_h2
+        df['energy to abadoned (MWh)'] = e_ab 
+        df['h2 produced (kg)'] = m_h2 
+
+
+
+        writer = pd.ExcelWriter(datafile, engine='xlsxwriter')
+
+        df.to_excel(writer,sheet_name = sheetname)
+
+        workbook = writer.book
+        worksheet = writer.sheets[sheetname]
+
+        # set format of data
+        form1 = workbook.add_format({'num_format':'0'})
+        form2 = workbook.add_format({'num_format':'0.0'})
+        form3 = workbook.add_format({'num_format':'0.000'})
+
+        # add format
+        worksheet.set_column('B:E',10,form1)
+        worksheet.set_column('F:F',30,form2)
+        
+        worksheet.set_column('G:J',30,form3)
+
+        writer.save()
 
 
     # select data according to time interval, time_interval in unit of minute 

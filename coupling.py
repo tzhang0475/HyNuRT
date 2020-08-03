@@ -3,7 +3,7 @@
 # File              : coupling.py
 # Author            : tzhang
 # Date              : 27.07.2020
-# Last Modified Date: 31.07.2020
+# Last Modified Date: 01.08.2020
 # Last Modified By  : tzhang
 
 #from eco_analysis import *
@@ -93,19 +93,22 @@ class cp:
         return cases
 
     # obtain data from performance model to economic model
-    def model_cp_data(e_to_grid_array,e_to_h2_array,m_h2_array):
+    def model_cp_data(e_to_grid_array,e_to_h2_array,e_abandon_array,m_h2_array):
         dataflow = []
 
         # total electricity to grid, in MWh
         e_to_grid = e_to_grid_array[-1]
         # total electricity to pem, in MWh
         e_to_h2 = e_to_h2_array[-1]
+        # total abndoned energy
+        e_abandon = e_abandon_array[-1]
         # total h2 produced, in kg
         m_h2 = m_h2_array[-1]
 
         # merge to data array
         dataflow.append(e_to_grid)
         dataflow.append(e_to_h2)
+        dataflow.append(e_abandon)
         dataflow.append(m_h2)
     
         return dataflow
@@ -127,7 +130,7 @@ class cp:
         for data in lifetime_scale[1:]:
             sys_data = data[1:]
             if sum(sys_data) == 0.0:
-                data_flow = [0.0,0.0,0.0,0.0]
+                data_flow = [0.0,0.0,0.0,0.0,0.0]
                 case_lifetime.append(data_flow)
             else:
                 idx = cases.index(sys_data)
@@ -170,12 +173,32 @@ class cp:
 
         e_to_grid = []
         e_to_h2 = []
+        e_ab = []
         m_h2 = []
 
         for i in range(len(case_lifetime)):
             e_to_grid.append(case_lifetime[i][0])
             e_to_h2.append(case_lifetime[i][1])
-            m_h2.append(case_lifetime[i][2])
+            e_ab.append(case_lifetime[i][2])
+            m_h2.append(case_lifetime[i][3])
 
-        return e_to_grid,e_to_h2,m_h2
+        return e_to_grid,e_to_h2,e_ab,m_h2
+
+    # calculate system utilization factor
+    def cal_f_uti(lifetime_scale,e_to_grid,e_to_h2):
+        f_uti_array = []
+        # hours in a year
+        hours = 365 * 24
+        # get array of utilization factor
+        for i in range(1,len(lifetime_scale)):
+            # energy produced with installed capacity
+            if lifetime_scale[i][-2] != 0.0:
+                e_capa = lifetime_scale[i][-2] * hours
+                f = (e_to_grid[i-1]+e_to_h2[i-1])/e_capa
+                f_uti_array.append(f)
+
+        f_uti = sum(f_uti_array)/len(f_uti_array)
+
+        return f_uti
+
 

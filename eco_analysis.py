@@ -3,7 +3,7 @@
 # File              : eco_analysis.py
 # Author            : tzhang
 # Date              : 26.11.2019
-# Last Modified Date: 31.07.2020
+# Last Modified Date: 01.08.2020
 # Last Modified By  : tzhang
 
 import sys
@@ -92,7 +92,7 @@ class nuclear_eco:
         self.IRR = 0.0
 
     # calculate the net cost of from 0 to nth year
-    def cal_cost(self,f_utilization):
+    def cal_cost(self):
 
         cost = []
 
@@ -142,7 +142,6 @@ class nuclear_eco:
         if year == 0:
             cost_year = 0.0
         elif year > 0 and year <= self.y_construction:
-            unit_done = int((year-1)/self.y_unit_construct)
     
             cost_year = occ_year + (self.om_unit_year+self.fuel_unit_year+self.dcms_unit_year)*unit_done + idc_year
     
@@ -152,7 +151,6 @@ class nuclear_eco:
             cost_year = ((self.om_unit_year+self.fuel_unit_year+self.dcms_unit_year)*self.n_unit)#*(1+r_discount)**i 
     
             cost_year = cost_year/1e6        # convert to million dollar 
-    
 
         return cost_year
 
@@ -1419,7 +1417,7 @@ print (PEM_eco.cashflow)
 an economic model for a hybrid system
 
 """
-from sys_control import *
+#from sys_control import *
 
 class system_eco:
     def __init__(self):
@@ -1553,17 +1551,25 @@ class system_eco:
         self.cashflow = cashflow
 
     # calculate system LCOE
-    def cal_LCOE(self):
-        pass
+    def cal_LCOE(self,e_to_grid,m_h2):
 
+        # total electricity produced to grid
+        e_tot_to_grid = sum(e_to_grid)
+
+        # total cost of the system
+        cost_tot = -sum(self.cost) * 1e6    # in million dollar
+
+        LCOE = cost_tot/e_tot_to_grid
+
+        self.LCOE = LCOE
     # calculate NPV
-    def cal_NPV(self,r_discout,r_inflation):
+    def cal_NPV(self,r_discount,r_inflation):
         # calculate the real rate of interest
         r_interest = r_discount + r_inflation
 
         NPV = 0
 
-        for i in range(self.sys_lifetime+1):
+        for i in range(len(self.cashflow)):
             NPV_curr = self.cashflow[i]/(1+r_interest)**i
 
             NPV = NPV + NPV_curr
@@ -1597,7 +1603,7 @@ class system_eco:
 
             NPV_new = 0.0
 
-            for i in range(self.sys_lifetime+1):
+            for i in range(len(self.cashflow)):
                 NPV_curr = self.cashflow[i]/(1+IRR)**i
                 NPV_new = NPV_new + NPV_curr
 
