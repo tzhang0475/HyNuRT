@@ -3,7 +3,7 @@
 # File              : SMR.py
 # Author            : tzhang
 # Date              : 06.11.2019
-# Last Modified Date: 30.07.2020
+# Last Modified Date: 05.08.2020
 # Last Modified By  : tzhang
 
 """
@@ -13,7 +13,7 @@ a simple SMR model: working as base load
 """
 
 class SMR_module:
-    def __init__(self,P_nominal,LF_lim):
+    def __init__(self,P_nominal,LF_lim=None):
         self.P_nominal = P_nominal
         self.LF_lim = LF_lim        # percentage/min, i.g. 0.05 5%/min
 
