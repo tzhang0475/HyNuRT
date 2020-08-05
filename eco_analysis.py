@@ -3,7 +3,7 @@
 # File              : eco_analysis.py
 # Author            : tzhang
 # Date              : 26.11.2019
-# Last Modified Date: 01.08.2020
+# Last Modified Date: 03.08.2020
 # Last Modified By  : tzhang
 
 import sys
@@ -921,14 +921,18 @@ class wind_eco:
         self.IRR = 0.0
 
     # calculate year cost under different conditions
-    def cal_cost_year(self,unit_op,unit_con):
+    def cal_cost_year(self,unit_op,unit_con,unit_replace):
 
         # calculate construction occ of this year
         cost_con = self.occ_unit * unit_con
+
+        # calculate construction occ of this year
+        cost_replace = self.occ_unit * unit_replace
+
         # calculate operation cost of this year
         cost_op = (self.om_unit_year+self.dcms_unit_year) * unit_op
 
-        cost_year = (cost_con + cost_op)/1e6    # convert to million dollar
+        cost_year = (cost_con + cost_op + cost_replace)/1e6    # convert to million dollar
 
         return cost_year
 
@@ -1301,7 +1305,7 @@ class h2_cost_simple:
         return profit
 
     # calculate year cost under different conditions
-    def cal_cost_year(self,unit_op,unit_con,price_ePEM,e_to_h2):
+    def cal_cost_year(self,unit_op,unit_con,unit_replace,price_ePEM,e_to_h2):
 
         # calculate construction occ of this year
         cost_con = self.cost_CAPEX * unit_con
@@ -1309,11 +1313,14 @@ class h2_cost_simple:
         # calculate operation cost of this year
         cost_op = self.cost_OPEX * unit_op
 
+        # calculate construction occ of this year
+        cost_replace = self.cost_CAPEX * unit_replace
+
         # calculate electricity cost
         cost_elec = price_ePEM * e_to_h2
 
 
-        cost_year = (cost_con + cost_op + cost_elec)/1e6    # convert to million dollar
+        cost_year = (cost_con + cost_op + cost_elec + cost_replace)/1e6    # convert to million dollar
 
         return cost_year
 
@@ -1482,7 +1489,7 @@ class system_eco:
 
     
     # calculate hybrid cost
-    def _cal_hybrid_cost_(self,lifetime_scale,eco_pack,price_ePEM,e_to_h2):
+    def _cal_hybrid_cost_(self,sys_config,lifetime_scale,eco_pack,price_ePEM,e_to_h2):
 
         cost = []
 
@@ -1495,6 +1502,23 @@ class system_eco:
                 print ('model under development')
             elif char == '10':
                 col_pem = lifetime_scale[0].index(char)
+
+        for key in sys_config.keys():
+            if sys_config[key][0] == '00':
+                npp_lifetime = sys_config[key][3]
+                npp_batch = sys_config[key][-1]
+            elif sys_config[key][0] == '01':
+                wind_lifetime = sys_config[key][3]
+                wind_batch = sys_config[key][-1]
+            elif sys_config[key][0] == '02':
+                print ('model under development')
+            elif sys_config[key][0] == '10':
+                pem_lifetime = sys_config[key][3]
+                pem_batch = sys_config[key][-1]
+            elif sys_config[key][0] == '20':
+                store_lifetime = sys_config[key][3]
+                store_batch = sys_config[key][-1]
+                
        
         for i in range(1,len(lifetime_scale)):
             year = lifetime_scale[i][0]
@@ -1511,35 +1535,65 @@ class system_eco:
                     cost_npp = data['00'].cal_cost_year(npp_unit_done,year)
                 elif data.get ('01'):
                     wfarm_unit_op = int(lifetime_scale[i][col_wind])
+
                     if year == 0:
                         wfarm_unit_con = 0
+                        wfarm_unit_replace = 0
                     else:
-                        wfarm_unit_con = wfarm_unit_op - int(lifetime_scale[i-1][col_wind])
-                    cost_wfarm = data['01'].cal_cost_year(wfarm_unit_op,wfarm_unit_con)
+                        cycle = int(year/wind_lifetime)
+
+                        if year < lifetime_scale[-1][0]:
+                            wfarm_unit_con = int(lifetime_scale[i+1][col_wind]) - int(lifetime_scale[i][col_wind])
+                        else:
+                            wfarm_unit_con = 0
+
+                        if cycle > 0 and cycle < wind_batch:
+                            idx = i - cycle*wind_lifetime
+                            wfarm_unit_replace = max(0,int(lifetime_scale[idx][col_wind]) - int(lifetime_scale[idx-1][col_wind]))
+                        else:
+                            wfarm_unit_replace = 0
+                        
+                        #print ('wind',year,wfarm_unit_op,wfarm_unit_con,wfarm_unit_replace)
+
+                    cost_wfarm = data['01'].cal_cost_year(wfarm_unit_op,wfarm_unit_con,wfarm_unit_replace)
+
                 elif data == 'PV_eco':
                     print ('model under development')
                 elif data.get('10'):
                     pem_unit_op = int(lifetime_scale[i][col_pem])
                     if year == 0:
                         pem_unit_con = 0
+                        pem_unit_replace = 0
                     else:
-                        pem_unit_con = int(pem_unit_op) - int(lifetime_scale[i-1][col_pem])
+                        cycle = int(year/pem_lifetime)
 
-                    cost_pem = data['10'].cal_cost_year(pem_unit_op,pem_unit_con,price_ePEM[i-1],e_to_h2[i-1])
+                        if year < lifetime_scale[-1][0]:
+                            pem_unit_con = int(lifetime_scale[i+1][col_pem]) - int(lifetime_scale[i][col_pem])
+                        else:
+                            pem_unit_con = 0
+
+                        if cycle > 0 and cycle < pem_batch:
+                            idx = i - cycle*pem_lifetime
+                            pem_unit_replace = max(0,int(lifetime_scale[idx][col_pem]) - int(lifetime_scale[idx-1][col_pem]))
+                        else:
+                            pem_unit_replace = 0
+                        #print ('pem',year,pem_unit_op,pem_unit_con,pem_unit_replace)
+
+                    cost_pem = data['10'].cal_cost_year(pem_unit_op,pem_unit_con,pem_unit_replace,price_ePEM[i-1],e_to_h2[i-1])
 
             cost_year = -(cost_npp + cost_wfarm + cost_PV +cost_pem)
 
             cost.append(cost_year)
-           
+
         self.cost = cost
 
     # calculate hybrid systme cashflow
-    def cal_hybrid_cashflow(self,lifetime_scale,eco_pack,price_e,price_ePEM,price_h2,e_to_grid,e_to_h2,m_h2):
+    def cal_hybrid_cashflow(self,sys_config,lifetime_scale,eco_pack,price_e,price_ePEM,price_h2,e_to_grid,e_to_h2,m_h2):
 
         cashflow = []
 
         self._cal_hybrid_profit_(lifetime_scale,price_e,price_h2,e_to_grid,m_h2)
-        self._cal_hybrid_cost_(lifetime_scale,eco_pack,price_ePEM,e_to_h2)
+        self._cal_hybrid_cost_(sys_config,lifetime_scale,eco_pack,price_ePEM,e_to_h2)
 
         for i in range(len(lifetime_scale)-1):
             if i == 0:
