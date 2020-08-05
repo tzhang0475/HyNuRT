@@ -3,7 +3,7 @@
 # File              : NuReModel.py
 # Author            : tzhang
 # Date              : 20.11.2019
-# Last Modified Date: 05.08.2020
+# Last Modified Date: 04.08.2020
 # Last Modified By  : tzhang
 
 """
@@ -32,80 +32,85 @@ from wind_turbine import *
 from material import *
 from sys_control import *
 from prepost_process import *
-#from eco_analysis import *
+from eco_analysis import *
 from coupling import *
 
-inData = dataReader('input')
-inData.read()
 
 ###############################################
 # configration of the hybrid system
 ###############################################
 # input for electrical grid 
-dataMode = inData.dataMode
-inFile = inData.inFile
-multiplier = inData.multiplier
+dataMode = 0
+inFile = 'UK_gridwatch_year2018_Jan.csv'
+multiplier = 0.01
 
 ###############################################
 # hybrid system config
-components = inData.components
-num_chars = inData.num_chars
-unit_power = inData.unit_power
-n_units = inData.n_units
-lifetimes = inData.lifetimes
-con_time = inData.con_time
+components = ['SMR','wind','PEM','storage']
+num_chars = ['00','01','10','20']
+unit_power = [50.0,2.0,1.0,0.0]
+n_units = [6,66,210,1]
+lifetimes = [60,30,20,60]
+con_time = [2,1,1,1]
 
-sys_lifetime = inData.sys_lifetime
+sys_lifetime = 60
 
 # hybrid system control parameter
 # data selection time scale
-time_interval = inData.time_interval
+time_interval = 60.0
 # auto construction scheme
-auto_con = inData.auto_con
+auto_con = 1
 # length of the time array
-len_time = inData.len_time
+len_time = 8928
 ###############################################
 
 
 ###############################################
 # economic data of the hybrid system
 ###############################################
-dollar_year = inData.dollar_year
+dollar_year = 2018
 
 # discount rate 
-r_discount = inData.r_discount
+r_discount = 0.05
 # inflation rate
-r_inflation = inData.r_inflation
+r_inflation = 0.03
 
 # energy inflation rate
 # e_inflation = 0.05
 
-price_e_base = inData.price_e_base                      # electricty price per MWh
-price_ePEM_base = inData.price_ePEM_base                    # electricty price per MWh
-price_h2_base = inData.price_h2_base                     # price of h2 per kg
+price_e_base = 130                      # electricty price per MWh
+price_ePEM_base = 0.0                    # electricty price per MWh
+price_h2_base = 14.0                     # price of h2 per kg
 
 ###############################################
 # wind data
-v_max = inData.v_max
-v_mean = inData.v_mean
-n_range = inData.n_range
+v_max = 28.0
+v_mean = 11.0
+n_range = 40
 
 # wind turbine data
-d_wing = inData.d_wing # in m,  wind turbine diameter
-J_turbine = inData.J_turbine # in kg.m^2, moment of initia of turbine
-h_hub = inData.h_hub # in m, the height of the hub
+d_wing = 90 # in m,  wind turbine diameter
+J_turbine = 1.3E7 # in kg.m^2, moment of initia of turbine
+h_hub = 50 # in m, the height of the hub
+#P_lim = 2  # in MW, power limit of a turbine
 
-cut_in = inData.cut_in
-cut_out = inData.cut_out
+cut_in = 4.0
+cut_out = 25.0
 
-loc_type = inData.loc_type        # 1 for land wind farm, 0 for off-shore wind farm
+# wind farm data
+#w_n_unit = 80
+
+#w_lifetime = 30     # 30 years life time
+loc_type = 1        # 1 for land wind farm, 0 for off-shore wind farm
 
 # captical cost of a wind turbine per kW
-w_cost_kW = inData.w_cost_kW      # $ per kW 
+w_cost_kW = 1590      # $ per kW 
+
 # om cost of a wind turbine per MWh
-w_om_cost_MWh = inData.w_om_cost_MWh
+w_om_cost_MWh = 14.4
+
 # decommissioning cost of a wind turbine per MWh
-w_dcms_cost_MWh = inData.w_dcms_cost_MWh
+w_dcms_cost_MWh = 4.0
 
 
 ###############################################
@@ -115,30 +120,33 @@ w_dcms_cost_MWh = inData.w_dcms_cost_MWh
 ###############################################
 # SMR module data
 #P_nominal = 50 # nominal power, in MW
-LF_lim = inData.LF_lim
+LF_lim = 0.05
 
 
 # whether first of a kind, 1 for yes, 0 for no
-FOAK = inData.FOAK
+FOAK = 1
 
-eta_direct = inData.eta_direct              # oecd nea value, large uncentainty
-eta_indirect = inData.eta_indirect              # oecd nea value, large uncentainty
+# life time expection of the NPP
+#npp_lifetime = 60
+
+eta_direct = 0.51              # oecd nea value, large uncentainty
+eta_indirect = 0.51              # oecd nea value, large uncentainty
 
 # operation and maintainess cost, dollar per MWh 
-nu_om_cost_MWh = inData.nu_om_cost_MWh
+nu_om_cost_MWh = 25.8  
 # fuel cost, dollar per MWh 
-nu_fuel_cost_MWh = inData.nu_fuel_cost_MWh
+nu_fuel_cost_MWh = 8.26
 # decommisioning cost per MWh
-nu_dcms_cost_MWh = inData.nu_dcms_cost_MWh
+nu_dcms_cost_MWh = 0.16 
 
 # config learning factors
-x_learn = inData.x_learn 
-y_learn = inData.y_learn
-z_learn = inData.z_learn
-k_learn = inData.k_learn
+x = 0.15
+y = 0.74
+z = 0.82
+k = 0.02
 
 # technology learning rate
-r_learning = inData.r_learning
+r_learning = 0.04
 
 ###############################################
 
@@ -146,22 +154,21 @@ r_learning = inData.r_learning
 
 ###############################################
 # hydrogen cell data
-theta_m = inData.theta_m     # the thickness of membrane, in mm
-A_m = inData.A_m             # the area of the membrane, in cm^2
+theta_m = 0.13     # the thickness of membrane, in mm
+A = 32             # the area of the membrane, in cm^2
+T = 90             # in C
 
-T_op = inData.T_op             # in C
+P_h2 = 1e5         # pressure of the system in pa 
+P_o2 = 1e5
+P_h2o = 2e5
 
-P_h2 = inData.P_h2         # pressure of the system in pa 
-P_o2 = inData.P_o2
-P_h2o = inData.P_h2o
+alpha_an = 0.5
+alpha_cat = 0.5
 
-alpha_an = inData.alpha_an
-alpha_cat = inData.alpha_cat
+i0_cat = 1e-3  # in A/cm^2
+i0_an = 1e-7   # in A/cm^2
 
-i0_cat = inData.i0_cat  # in A/cm^2
-i0_an = inData.i0_an   # in A/cm^2
-
-iter_max = inData.iter_max # maximum number of iterations
+iter_max = 5000 # maximum number of iterations
 
 ###############################################
 
@@ -169,14 +176,19 @@ iter_max = inData.iter_max # maximum number of iterations
 
 ###############################################
 # hydrogen cluster and storage data
-Pmin_unit = inData.Pmin_unit    # minimum power of a cell
+#h2_n_unit = 500        # total 300 units of pem cells
+#Pmax_unit = 0.6     # maximum power of a cell
+Pmin_unit = 0.05    # minimum power of a cell
 
-m_store = inData.m_store          # initial storage, in kg
+m_store = 0          # initial storage, in kg
 
-capex_kW = inData.capex_kW     # capital cost per kW
-cap_op_ratio = inData.cap_op_ratio # capital cost operational cost ratio
+capex_kw = 1200     # capital cost per kW
+cap_op_ratio = 0.02 # capital cost operational cost ratio
+
+#pem_lifetime = 20   # lifetime of pem fuel cell
 
 ###############################################
+
 
 ###############################################
 # generate grid demand
@@ -187,8 +199,7 @@ data_grid.demand_plot()
 time = data_grid.aquire_time()
 P_demand = data_grid.aquire_demand()
 
-if len_time != 0:
-    time = time[0:len_time]
+time = time[0:len_time]
 
 t_scale = cp.time_scale_trans(time)
 
@@ -283,7 +294,7 @@ for case in cases[1:]:
     npp = SMR_NPP(n_unit_npp_op)                   # SMR NPP
     
     # energy storage and hybrid usage
-    h2_sys = h2_system(theta_m,A_m,alpha_an,alpha_cat,i0_an,i0_cat,T_op,P_h2,P_o2,P_h2o,iter_max,\
+    h2_sys = h2_system(theta_m,A,alpha_an,alpha_cat,i0_an,i0_cat,T,P_h2,P_o2,P_h2o,iter_max,\
                         n_unit_pem_op,pem_P_unit,Pmin_unit,\
                         m_store)
     
@@ -434,7 +445,7 @@ for key in system.config.keys():
     if system.config[key][0] == '00':
         smr_eco = nuclear_eco(system.config[key][1],system.config[key][2],dollar_year,system.config[key][3],system.config[key][4],FOAK)
         ME_2_curr,ME_9_curr = smr_eco.import_coa()
-        smr_eco.cal_OCC(ME_2_curr,ME_9_curr,eta_direct,eta_indirect,x_learn,y_learn,z_learn,k_learn,r_learning)
+        smr_eco.cal_OCC(ME_2_curr,ME_9_curr,eta_direct,eta_indirect,x,y,z,k,r_learning)
         smr_eco.cal_IDC(r_discount)
         smr_eco.cal_OM_unit(nu_om_cost_MWh,f_uti)
         smr_eco.cal_fuel_unit(nu_fuel_cost_MWh,f_uti)
@@ -457,8 +468,8 @@ for key in system.config.keys():
         print ("PV model under development")
     elif system.config[key][0] == '10':
         PEM_eco = h2_cost_simple(system.config[key][1],system.config[key][2],system.config[key][3],system.config[key][4])
-        PEM_eco.cal_CAPEX(capex_kW)
-        PEM_eco.cal_OPEX(capex_kW,cap_op_ratio)
+        PEM_eco.cal_CAPEX(capex_kw)
+        PEM_eco.cal_OPEX(capex_kw,cap_op_ratio)
 
         data = {'10':PEM_eco}
         eco_pack.append(data)

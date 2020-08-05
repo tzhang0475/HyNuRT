@@ -3,7 +3,7 @@
 # File              : eco_model.py
 # Author            : tzhang
 # Date              : 29.07.2020
-# Last Modified Date: 01.08.2020
+# Last Modified Date: 03.08.2020
 # Last Modified By  : tzhang
 
 import sys
@@ -59,7 +59,7 @@ a test class for SMR_eco
 
 """
 sub_sys1 = 'smr'
-P_unit = 60             #electrical power in MW
+P_unit = 50             #electrical power in MW
 n_unit = 6
 year = 2018
 FOAK = 1
@@ -79,7 +79,7 @@ dcms_cost_MWh = 0.16
 y_unit_construct = 2
 
 # electricty price per MWh
-price_e = 130
+price_e = 110
 
 # the utilization factor
 f_uti = 0.85
@@ -147,7 +147,7 @@ a test class for wind_eco
 """
 sub_sys2 = 'windfarm'
 P_lim = 2           # in MW
-w_n_unit = 40   
+w_n_unit = 60   
 w_lifetime = 30     # 30 years life time
 loc_type = 1        # 1 for land wind farm, 0 for off-shore wind farm
 w_con_time = 1
@@ -160,7 +160,7 @@ r_inflation = 0.025
 e_inflation = 0.05
 
 # electricty price per MWh
-price_e = 130
+price_e = 110
 
 # captical cost of a wind turbine per kW
 cost_kW = 1590      # $ per kW 
