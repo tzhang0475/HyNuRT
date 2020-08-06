@@ -3,11 +3,12 @@
 # File              : coupling.py
 # Author            : tzhang
 # Date              : 27.07.2020
-# Last Modified Date: 01.08.2020
+# Last Modified Date: 06.08.2020
 # Last Modified By  : tzhang
 
 #from eco_analysis import *
-        
+
+import numpy as np
 """
 
 a module to couple data between system performance and economic analysis
@@ -122,6 +123,28 @@ class cp:
             dataflow_new.append(data_new)
 
         return dataflow_new
+
+    # merge case_data of different inFiles to get average
+    def case_data_ave(case_dict):
+
+        case_data = []
+
+        for key in case_dict.keys():
+            try:
+                case_array
+            except NameError:
+                case_array = np.zeros((len(case_dict[key]),5))
+
+            data = np.asarray(case_dict[key], dtype = float)
+            case_array = case_array + data
+
+        case_array = case_array/len(case_dict)
+
+        for data in case_array:
+            data = list(data)
+            case_data.append(data)
+
+        return case_data
 
     # convert case data to lifetime data
     def case_lifetime_convert(lifetime_scale,cases,case_data):
