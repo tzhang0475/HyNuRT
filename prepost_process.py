@@ -24,9 +24,13 @@ class dataReader:
         self.inputfile = inputfile
         self.log = 'run.log'
 
+        # case title
+        self.title = 'default'
+        self.label = 'system'
+
         # grid variables 
         self.dataMode = 0
-        self.inFile = None
+        self.inFile_Array = []
         self.multiplier = 1.0   # set default value
 
         # system config variables
@@ -158,6 +162,32 @@ class dataReader:
 
         f.close()
 
+    def _get_info_(self,inData):
+        f = open(self.log,'a')
+
+        if any('title' in line for line in inData):
+            for line in inData:
+                if 'title' in line:
+                    title = str(line.split('=')[-1].lstrip().rstrip())
+                    self.title = title
+        else:
+            f.write ('MESSAGE: Model title set as "default"!\n')
+            f.write('\n')
+            print ('MESSAGE: Model title set as "default"!\n')
+
+        if any('label' in line for line in inData):
+            for line in inData:
+                if 'label' in line:
+                    label = str(line.split('=')[-1].lstrip().rstrip())
+                    self.label = label
+        else:
+            f.write ('MESSAGE: Model label set as "system"!\n')
+            f.write('\n')
+            print ('MESSAGE: Model label set as "system"!\n')
+
+        f.close()
+
+
     def _grid_data_(self,inData):
 
         f = open(self.log,'a')
@@ -175,10 +205,15 @@ class dataReader:
         
         if dataMode == 0:
             if any('inFile' in line for line in inData):
+                inFile_Array = []
                 for line in inData:
                     if 'inFile' in line:
-                        inFile = str(line.split('=')[-1].lstrip().rstrip())
-                        self.inFile = inFile
+                        dataRead = line.split('=')[-1]
+
+                        for data in dataRead.split(','):
+                            inFile_Array.append(str(data.lstrip().rstrip()))
+
+                        self.inFile_Array = inFile_Array
             else:
                 f.write ('ERROR: Please define inFile!\n')
                 f.write('\n')
@@ -900,6 +935,7 @@ class dataReader:
     def read(self):
         inData = self._read_input_()
         self._log_init_(inData)
+        self._get_info_(inData)        
         self._grid_data_(inData)        
         self._system_data_(inData)  
         self._system_control_(inData)  
@@ -943,6 +979,8 @@ class post_process:
         pltName = 'grid_blance_'+label+'.png'
         plt.savefig(pltName,dpi = 100)
 
+        plt.close(pltName)
+
     # plot the stored mass of hydrogen
     def plt_h2_stored(label,time,m_stored_data):
         plt.figure(figsize = (12,8))
@@ -954,6 +992,7 @@ class post_process:
 
         pltName = 'hydrogen_storage'+'_'+label+'.png'
         plt.savefig(pltName,dpi = 100)
+        plt.close(pltName)
 
 
     # plot the abandoned power 
@@ -967,6 +1006,7 @@ class post_process:
 
         pltName = 'power_abondoned'+label+'.png'
         plt.savefig(pltName,dpi = 100)
+        plt.close(pltName)
 
     # plot cash flow of a unit n years
     def plt_cashflow(n_year,cashflow,label):
@@ -982,6 +1022,7 @@ class post_process:
 
         pltName = label+'_'+'cashflow.png'
         plt.savefig(pltName,dpi = 100)
+        plt.close(pltName)
 
     # plot cash flow of a system with n components and cash flow of each unit in the system
     def plt_sys_cashflow(n_year,cashflow,cashdic):
