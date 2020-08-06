@@ -1,11 +1,13 @@
- *** 2020-08-05 14:46:45.025260 *** 
+ *** 2020-08-06 01:16:20.473673 *** 
 
  ********* CLEAN INPUT FILE *********
+title = Nu-Re Model
+label = system
 dataMode = 0
-inFile = UK_gridwatch_year2018_Jan.csv
+inFile = UK_gridwatch_year2018_Jan.csv, UK_gridwatch_year2018_Apr.csv, UK_gridwatch_year2018_Jul.csv, UK_gridwatch_year2018_Oct.csv
 multiplier = 0.01
-components = SMR,wind,PEM,storage
-num_chars = 00,01,10,20
+components = SMR, wind, PEM, storage
+num_chars = 00, 01, 10, 20
 unit_power = 50.0, 2.0, 1.0, 0.0
 n_units = 6, 66, 210, 1
 lifetimes =  60, 30, 20, 60
@@ -13,7 +15,6 @@ con_time = 2, 1, 1, 1
 sys_lifetime = 60
 time_interval = 60.0
 auto_con = 1
-len_time = 289
 dollar_year = 2018
 r_discount = 0.05
 r_inflation = 0.03
@@ -62,3 +63,6 @@ cap_op_ratio = 0.02
  ********* CLEAN INPUT FILE *********
 
  ********* WARNING WHILE READ INPUT *********
+WARNING: auto_con not defined!
+MESSAGE: auto construction sequence applied!
+

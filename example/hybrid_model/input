@@ -1,15 +1,20 @@
 ###############################################
+# title of the case
+###############################################
+title = Nu-Re Model
+label = system      # label should be a string without space
+###############################################
 # configration of the hybrid system
 ###############################################
 # input for electrical grid 
 dataMode = 0
-inFile = UK_gridwatch_year2018_Jan.csv
+inFile = UK_gridwatch_year2018_Jan.csv, UK_gridwatch_year2018_Apr.csv, UK_gridwatch_year2018_Jul.csv, UK_gridwatch_year2018_Oct.csv
 multiplier = 0.01
 
 ###############################################
 # hybrid system config
-components = SMR,wind,PEM,storage
-num_chars = 00,01,10,20
+components = SMR, wind, PEM, storage
+num_chars = 00, 01, 10, 20
 unit_power = 50.0, 2.0, 1.0, 0.0
 n_units = 6, 66, 210, 1
 lifetimes =  60, 30, 20, 60
@@ -23,7 +28,7 @@ time_interval = 60.0
 # auto construction scheme
 auto_con = 1
 # length of the time array
-len_time = 289
+#len_time = 289
 ###############################################
 
 

@@ -3,7 +3,7 @@
 # File              : NuReModel.py
 # Author            : tzhang
 # Date              : 20.11.2019
-# Last Modified Date: 05.08.2020
+# Last Modified Date: 06.08.2020
 # Last Modified By  : tzhang
 
 """
@@ -32,18 +32,24 @@ from wind_turbine import *
 from material import *
 from sys_control import *
 from prepost_process import *
-#from eco_analysis import *
+from eco_analysis import *
 from coupling import *
 
 inData = dataReader('input')
 inData.read()
 
 ###############################################
+# run infomation
+###############################################
+title = inData.title
+label = inData.label
+
+###############################################
 # configration of the hybrid system
 ###############################################
 # input for electrical grid 
 dataMode = inData.dataMode
-inFile = inData.inFile
+inFile_Array = inData.inFile_Array
 multiplier = inData.multiplier
 
 ###############################################
@@ -178,19 +184,7 @@ cap_op_ratio = inData.cap_op_ratio # capital cost operational cost ratio
 
 ###############################################
 
-###############################################
-# generate grid demand
-###############################################
-data_grid = grid(dataMode,inFile,multiplier)
-data_grid.gen()
-data_grid.demand_plot()
-time = data_grid.aquire_time()
-P_demand = data_grid.aquire_demand()
 
-if len_time != 0:
-    time = time[0:len_time]
-
-t_scale = cp.time_scale_trans(time)
 
 ###############################################
 # build systems structure
@@ -230,193 +224,222 @@ for key in system.config.keys():
 ###############################################
 
 
-
 ###############################################
 # electricity production part
-case_data = []
+case_dict = {}
+for inFile in inFile_Array:
 
-for case in cases[1:]:
+    idx = inFile_Array.index(inFile)
 
-    num = len(case_data)+1
+    key_dataset = 'dataset_'+str(idx)
 
-    case_label = 'case'+str(num)
+    
+    ###############################################
+    # generate grid demand
+    ###############################################
+    data_grid = grid(dataMode,inFile,multiplier)
+    data_grid.gen()
+    #data_grid.demand_plot()
+    time = data_grid.aquire_time()
+    P_demand = data_grid.aquire_demand()
+    
+    if len_time != 0:
+        time = time[0:len_time]
+    
+    t_scale = cp.time_scale_trans(time)
+    
+    #################################################
+    # calculate system performance during time period
+    #################################################
+    case_data = []
+    for case in cases[1:]:
+    
+        num = len(case_data)+1
+    
+        case_label = 'case'+str(num)
+            
+        capa_ratio = float(case[-1])
+    
+        # read operation unit data
+        for char in cases[0]:
+            if char == '00':
+                n_unit_npp_op = int(case[col_npp])
+            elif char == '01':
+                n_unit_wind_op = int(case[col_wind])
+            elif char == '02':
+                print ("PV model under development")
+            elif char == '10':
+                n_unit_pem_op = int(case[col_pem])
+            elif system.config[key][0] == '20':
+                print ("H2 storage  model under development")
+    
+        # scale demand according to capacity ratio
+        P_demand = data_grid.aquire_demand_array()
+        P_demand = list(P_demand * capa_ratio)
+       
+        if len_time != 0:
+            P_demand = P_demand[0:len_time]
+    
         
-    capa_ratio = float(case[-1])
+        ###############################################
+        # generate wind data during simulation time
+        ###############################################
+        wind = wind_Rayleigh(v_max,v_mean,n_range,time)
+        time,v_wind = wind.genData()  # NOTE:the unit of time is in min #
+        #print (v_wind)
+        #wind.plt_v_dis()
+        #wind.plt_windData()
+        
+        ###############################################
+        # create modules in the system
+        ###############################################
+        w_turbine = wind_Turbine(d_wing,J_turbine,h_hub,w_P_unit,cut_in,cut_out)  # wind turbine
+        w_farm = wind_farm(n_unit_wind_op)   # wind farm
+        
+        # nuclear
+        module = SMR_module(nu_P_unit,LF_lim)   # SMR module
+        npp = SMR_NPP(n_unit_npp_op)                   # SMR NPP
+        
+        # energy storage and hybrid usage
+        h2_sys = h2_system(theta_m,A_m,alpha_an,alpha_cat,i0_an,i0_cat,T_op,P_h2,P_o2,P_h2o,iter_max,\
+                            n_unit_pem_op,pem_P_unit,Pmin_unit,\
+                            m_store)
+        
+        ###############################################
+        # modelling a windturbine
+        ###############################################
+        # air property
+        airData = air()
+        airData.constant()
+        d_air = airData.density
+        # cp curve
+        cp_curve = cp_IEC()
+        cp_curve.curve_A()
+        #cp_curve.cp_plot()
+        cp_array = cp_curve.cp_array(v_wind)
+        
+        wP_out = w_turbine.P_output(d_air, time, v_wind, cp_array)
+        #print (wP_out)
+        
+        ###############################################
+        # modelling a wind farm 
+        ###############################################
+        P_windfarm = w_farm.pArray(wP_out)
+        #print ('wind farm output ',P_windfarm)
+        #w_farm.wPower_plot(time,P_windfarm)
+        
+        # calculate windfarm intermittence factor
+        f_inter = w_farm.cal_f_inter(P_windfarm,time,w_P_unit)
+        
+        ###############################################
+        # modelling a SMR NPP 
+        ###############################################
+        p_unit = module.m_power()
+        P_nuclear = npp.npp_power(p_unit)
+        
+        #print ('nuclear power ',P_nuclear)
+        
+        
+        ####################################################################
+        # calculate the power produced from coupled nuclear-renewable system
+        ####################################################################
+        P_windfarm = np.asarray(P_windfarm)
+        P_coupled = P_nuclear + P_windfarm
+        #print ('electricity produced by coupled system ',P_coupled)
+        #print ('grid demand ', P_demand)
+        
+        
+         
+        ###################################################
+        # calculate the grid and hydrogen system balancing
+        ###################################################
+        # aquire minimum demand of hydrogen production 
+        Pmin_cluster = h2_sys.Pmin_system()
+        #print ('minimun power for h2 cluster ',Pmin_cluster)
+        
+        balance_control = balancing()
+        P_to_h2sys = balance_control.cal_to_h2sys(P_coupled,P_demand,Pmin_cluster)
+        #print ('power to h2 system ', P_to_h2sys)
+        
+        # calculate accumulated erengy to and from h2 system, and net value
+        e_acc_to_h2sys,e_acc_from_h2sys,e_acc_net_h2sys =\
+                balance_control.cal_e_acc_h2sys(P_to_h2sys,time)
+        
+        ###############################################
+        # modelling hydrogen cells 
+        ###############################################
+        P_h2_produced,P_h2_consumed,P_abandon = h2_sys.cal(P_to_h2sys,time)
+        
+        #print ('h2 produces power ', P_h2_produced)
+        #print ('h2 consumed power ', P_h2_consumed)
+        m_tot = h2_sys.aquire_m()
+        #print ('\n')
+        #print ('total storage',m_tot, ' kg')
+        
+        m_stored_data = h2_sys.aquire_m_records()
+        
+        # calculate total ernegy abondaned and accumulated abandoned energy
+        e_abandon,e_acc_abandon = h2_sys.cal_e_abandon(P_abandon,time)
+        ###################################################
+        # calculate the powet to the grid 
+        ###################################################
+        P_to_grid = balance_control.cal_to_grid(P_coupled,P_h2_produced,P_h2_consumed)
+        
+        # calculate total ernegy send to grid
+        e_acc_to_grid = balance_control.cal_e_acc_grid(P_to_grid,time)
+        
+        #print ('wind-nuclear generated ',P_coupled)
+        #print ('power to h2 system ', P_to_h2sys)
+        #print ('power to grid ', P_to_grid)
+        #print ('grid demand ', P_demand)
+        #print ('abandoned power ',P_abandon)
+        #print ('stored hydrogen ', m_stored_data)
+        
+        
+        ###################################################
+        # post processing of data 
+        ###################################################
+        #post_process.plt_grid_balance(case_label,time,P_demand,P_to_grid)
+        #post_process.plt_h2_stored(case_label,time,m_stored_data)
+        #post_process.plt_power_abandon(time,P_abandon)
+        #post_process.data_performance('full',time,P_demand,P_coupled,P_to_grid,P_to_h2sys,P_abandon,m_stored_data)
+        
+        
+        time_slct, P_demand_slct, P_coupled_slct, \
+                P_to_grid_slct, P_to_h2sys_slct, P_abandon_slct,\
+                e_acc_to_grid_slct,e_acc_to_h2sys_slct, e_acc_from_h2sys_slct, e_acc_net_h2sys_slct, e_acc_abandon_slct,\
+                m_stored_data_slct = \
+                 post_process.data_opti(time,time_interval,P_demand,P_coupled,\
+                 P_to_grid,P_to_h2sys,P_abandon,\
+                 e_acc_to_grid,e_acc_to_h2sys,e_acc_from_h2sys,e_acc_net_h2sys,e_acc_abandon,\
+                 m_stored_data)
+        #post_process.data_performance('hour_data',time_slct,P_demand_slct,\
+        #        P_coupled_slct,P_to_grid_slct,P_to_h2sys_slct,P_abandon_slct,m_stored_data_slct)
+        #post_process.excel_performance('hour_data',time_slct,\
+        #        P_demand_slct,P_coupled_slct,P_to_grid_slct,P_to_h2sys_slct,P_abandon_slct,\
+        #        e_acc_to_grid_slct,e_acc_to_h2sys_slct,e_acc_from_h2sys_slct,e_acc_net_h2sys_slct,e_acc_abandon_slct,\
+        #        m_stored_data_slct)
+    
+        dataflow = cp.model_cp_data(e_acc_to_grid,e_acc_net_h2sys,e_abandon,m_stored_data)
+        dataflow = cp.data_scale(dataflow,t_scale)
+    
+        # add windfarm intermittence factor
+        dataflow.append(f_inter)
+    
+        case_data.append(dataflow)
+        
+        # end of data set production modelling
+        ###################################################
+    case_dict[key_dataset] = case_data
 
-    # read operation unit data
-    for char in cases[0]:
-        if char == '00':
-            n_unit_npp_op = int(case[col_npp])
-        elif char == '01':
-            n_unit_wind_op = int(case[col_wind])
-        elif char == '02':
-            print ("PV model under development")
-        elif char == '10':
-            n_unit_pem_op = int(case[col_pem])
-        elif system.config[key][0] == '20':
-            print ("H2 storage  model under development")
-
-    # scale demand according to capacity ratio
-    P_demand = data_grid.aquire_demand_array()
-    P_demand = list(P_demand * capa_ratio)
-    
-    P_demand = P_demand[0:len_time]
-
-    
-    ###############################################
-    # generate wind data during simulation time
-    ###############################################
-    wind = wind_Rayleigh(v_max,v_mean,n_range,time)
-    time,v_wind = wind.genData()  # NOTE:the unit of time is in min #
-    #print (v_wind)
-    #wind.plt_v_dis()
-    #wind.plt_windData()
-    
-    ###############################################
-    # create modules in the system
-    ###############################################
-    w_turbine = wind_Turbine(d_wing,J_turbine,h_hub,w_P_unit,cut_in,cut_out)  # wind turbine
-    w_farm = wind_farm(n_unit_wind_op)   # wind farm
-    
-    # nuclear
-    module = SMR_module(nu_P_unit,LF_lim)   # SMR module
-    npp = SMR_NPP(n_unit_npp_op)                   # SMR NPP
-    
-    # energy storage and hybrid usage
-    h2_sys = h2_system(theta_m,A_m,alpha_an,alpha_cat,i0_an,i0_cat,T_op,P_h2,P_o2,P_h2o,iter_max,\
-                        n_unit_pem_op,pem_P_unit,Pmin_unit,\
-                        m_store)
-    
-    ###############################################
-    # modelling a windturbine
-    ###############################################
-    # air property
-    airData = air()
-    airData.constant()
-    d_air = airData.density
-    # cp curve
-    cp_curve = cp_IEC()
-    cp_curve.curve_A()
-    cp_curve.cp_plot()
-    cp_array = cp_curve.cp_array(v_wind)
-    
-    wP_out = w_turbine.P_output(d_air, time, v_wind, cp_array)
-    #print (wP_out)
-    
-    ###############################################
-    # modelling a wind farm 
-    ###############################################
-    P_windfarm = w_farm.pArray(wP_out)
-    #print ('wind farm output ',P_windfarm)
-    #w_farm.wPower_plot(time,P_windfarm)
-    
-    # calculate windfarm intermittence factor
-    f_inter = w_farm.cal_f_inter(P_windfarm,time,w_P_unit)
-    
-    ###############################################
-    # modelling a SMR NPP 
-    ###############################################
-    p_unit = module.m_power()
-    P_nuclear = npp.npp_power(p_unit)
-    
-    #print ('nuclear power ',P_nuclear)
-    
-    
-    ####################################################################
-    # calculate the power produced from coupled nuclear-renewable system
-    ####################################################################
-    P_windfarm = np.asarray(P_windfarm)
-    P_coupled = P_nuclear + P_windfarm
-    #print ('electricity produced by coupled system ',P_coupled)
-    #print ('grid demand ', P_demand)
-    
-    
-     
-    ###################################################
-    # calculate the grid and hydrogen system balancing
-    ###################################################
-    # aquire minimum demand of hydrogen production 
-    Pmin_cluster = h2_sys.Pmin_system()
-    #print ('minimun power for h2 cluster ',Pmin_cluster)
-    
-    balance_control = balancing()
-    P_to_h2sys = balance_control.cal_to_h2sys(P_coupled,P_demand,Pmin_cluster)
-    #print ('power to h2 system ', P_to_h2sys)
-    
-    # calculate accumulated erengy to and from h2 system, and net value
-    e_acc_to_h2sys,e_acc_from_h2sys,e_acc_net_h2sys =\
-            balance_control.cal_e_acc_h2sys(P_to_h2sys,time)
-    
-    ###############################################
-    # modelling hydrogen cells 
-    ###############################################
-    P_h2_produced,P_h2_consumed,P_abandon = h2_sys.cal(P_to_h2sys,time)
-    
-    #print ('h2 produces power ', P_h2_produced)
-    #print ('h2 consumed power ', P_h2_consumed)
-    m_tot = h2_sys.aquire_m()
-    #print ('\n')
-    #print ('total storage',m_tot, ' kg')
-    
-    m_stored_data = h2_sys.aquire_m_records()
-    
-    # calculate total ernegy abondaned and accumulated abandoned energy
-    e_abandon,e_acc_abandon = h2_sys.cal_e_abandon(P_abandon,time)
-    ###################################################
-    # calculate the powet to the grid 
-    ###################################################
-    P_to_grid = balance_control.cal_to_grid(P_coupled,P_h2_produced,P_h2_consumed)
-    
-    # calculate total ernegy send to grid
-    e_acc_to_grid = balance_control.cal_e_acc_grid(P_to_grid,time)
-    
-    #print ('wind-nuclear generated ',P_coupled)
-    #print ('power to h2 system ', P_to_h2sys)
-    #print ('power to grid ', P_to_grid)
-    #print ('grid demand ', P_demand)
-    #print ('abandoned power ',P_abandon)
-    #print ('stored hydrogen ', m_stored_data)
-    
-    
-    ###################################################
-    # post processing of data 
-    ###################################################
-    post_process.plt_grid_balance(case_label,time,P_demand,P_to_grid)
-    post_process.plt_h2_stored(case_label,time,m_stored_data)
-    #post_process.plt_power_abandon(time,P_abandon)
-    #post_process.data_performance('full',time,P_demand,P_coupled,P_to_grid,P_to_h2sys,P_abandon,m_stored_data)
-    
-    
-    time_slct, P_demand_slct, P_coupled_slct, \
-            P_to_grid_slct, P_to_h2sys_slct, P_abandon_slct,\
-            e_acc_to_grid_slct,e_acc_to_h2sys_slct, e_acc_from_h2sys_slct, e_acc_net_h2sys_slct, e_acc_abandon_slct,\
-            m_stored_data_slct = \
-             post_process.data_opti(time,time_interval,P_demand,P_coupled,\
-             P_to_grid,P_to_h2sys,P_abandon,\
-             e_acc_to_grid,e_acc_to_h2sys,e_acc_from_h2sys,e_acc_net_h2sys,e_acc_abandon,\
-             m_stored_data)
-    #post_process.data_performance('hour_data',time_slct,P_demand_slct,\
-    #        P_coupled_slct,P_to_grid_slct,P_to_h2sys_slct,P_abandon_slct,m_stored_data_slct)
-    #post_process.excel_performance('hour_data',time_slct,\
-    #        P_demand_slct,P_coupled_slct,P_to_grid_slct,P_to_h2sys_slct,P_abandon_slct,\
-    #        e_acc_to_grid_slct,e_acc_to_h2sys_slct,e_acc_from_h2sys_slct,e_acc_net_h2sys_slct,e_acc_abandon_slct,\
-    #        m_stored_data_slct)
-
-    dataflow = cp.model_cp_data(e_acc_to_grid,e_acc_net_h2sys,e_abandon,m_stored_data)
-    dataflow = cp.data_scale(dataflow,t_scale)
-
-    # add windfarm intermittence factor
-    dataflow.append(f_inter)
-
-    case_data.append(dataflow)
-    
-    # end of electricity produciton part modeling
-    ###################################################
-
+# end of electricity produciton part modeling
+###################################################
 
 ###############################################
+# merge data of different inFiles to get average
+case_data_ave = cp.case_data_ave(case_dict)
 # hybrid coupling
-case_lifetime = cp.case_lifetime_convert(sys_con.lifetime_scale,cases,case_data)
+case_lifetime = cp.case_lifetime_convert(sys_con.lifetime_scale,cases,case_data_ave)
 y_tot = len(case_lifetime)
 price_e,price_ePEM,price_h2 = cp.cal_price_array(sys_con.lifetime_scale,price_e_base,price_ePEM_base,price_h2_base)
 e_to_grid,e_to_h2,e_ab,m_h2 = cp.cal_energy_array(case_lifetime)
@@ -443,7 +466,7 @@ for key in system.config.keys():
         data = {'00':smr_eco}
         eco_pack.append(data)
     elif system.config[key][0] == '01':
-        f_inter_array = wind_farm.cal_f_inter_array(sys_con.lifetime_scale,cases,case_data)
+        f_inter_array = wind_farm.cal_f_inter_array(sys_con.lifetime_scale,cases,case_data_ave)
         f_inter_ave = wind_farm.cal_f_inter_ave(f_inter_array)
         wfarm_eco = wind_eco(system.config[key][1],system.config[key][2],system.config[key][3],system.config[key][4])
         wfarm_eco.cal_OCC(w_cost_kW)
@@ -478,6 +501,6 @@ print ('system net present value: ', sys_eco.NPV, 'million $')
 sys_eco.cal_IRR(r_discount,r_inflation)
 print ('system internal rate of return: ', sys_eco.IRR)
 
-post_process.plt_cashflow(y_tot,sys_eco.cashflow,'system')
-post_process.writer_cashflow(sys_eco.cashflow,'system')
+post_process.plt_cashflow(y_tot,sys_eco.cashflow,label)
+post_process.writer_cashflow(sys_eco.cashflow,label)
 
