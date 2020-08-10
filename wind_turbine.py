@@ -3,7 +3,7 @@
 # File              : wind_turbine.py
 # Author            : tzhang
 # Date              : 28.10.2019
-# Last Modified Date: 31.07.2020
+# Last Modified Date: 09.08.2020
 # Last Modified By  : tzhang
 
 import math

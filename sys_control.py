@@ -3,7 +3,7 @@
 # File              : sys_control.py
 # Author            : tzhang
 # Date              : 24.11.2019
-# Last Modified Date: 03.08.2020
+# Last Modified Date: 09.08.2020
 # Last Modified By  : tzhang
 
 import numpy as np
@@ -358,6 +358,19 @@ class balancing:
         P_to_grid = P_coupled + P_h2_produced - P_h2_consumed
 
         return P_to_grid
+
+    # calculate ratio fit the demand
+    def ratio_fit(self,P_demand,P_to_grid):
+        ratio_list = []
+        
+        for i in range(len(P_demand)):
+            ratio = P_to_grid[i]/P_demand[i]
+            ratio_list.append(ratio)
+
+        # calculate average ratio
+        ratio_ave = sum(ratio_list)/len(ratio_list)
+
+        return ratio_ave
 
     # calculate total energy send to grid
     def cal_e_acc_grid(self,P_to_grid,time):

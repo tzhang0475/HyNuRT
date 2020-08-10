@@ -3,7 +3,7 @@
 # File              : H2Cell.py
 # Author            : tzhang
 # Date              : 13.11.2019
-# Last Modified Date: 25.07.2020
+# Last Modified Date: 10.08.2020
 # Last Modified By  : tzhang
 
 """
@@ -300,7 +300,7 @@ class h2_cluster:
     # calculate the number of working modules in partial electrolysis mode
     def n_unit_operation(self,P):
         n_operate = int(P/self.Pmin_unit)
-        print ('calculate result ', n_operate)
+        #print ('calculate result ', n_operate)
         P_residual = P - (self.Pmin_unit*n_operate)
 
         return n_operate, P_residual
@@ -325,16 +325,16 @@ class h2_cluster:
             P_residual = P - self.Pmax_unit*n_operate
 
         elif P_unit < self.Pmin_unit and P_unit >= 0:
-            print ('********************* WARNING !!*******************')
-            print ('  input power too low, pem partially functioning   ')
-            print ('***************************************************')
+            #print ('********************* WARNING !!*******************')
+            #print ('  input power too low, pem partially functioning   ')
+            #print ('***************************************************')
             self.working_state = True   # change the state to production, but no real production 
             self.operation_state = False    # operation state change to full operation
 
             n_operate,P_residual = h2_cluster.n_unit_operation(self,P) 
             P_unit = self.Pmin_unit
 
-            print ('partial operation: ', n_operate)
+            #print ('partial operation: ', n_operate)
 
         else:
             self.working_state = False   # change the state to consumption

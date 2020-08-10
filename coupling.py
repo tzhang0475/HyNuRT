@@ -3,7 +3,7 @@
 # File              : coupling.py
 # Author            : tzhang
 # Date              : 27.07.2020
-# Last Modified Date: 06.08.2020
+# Last Modified Date: 10.08.2020
 # Last Modified By  : tzhang
 
 #from eco_analysis import *
@@ -133,7 +133,7 @@ class cp:
             try:
                 case_array
             except NameError:
-                case_array = np.zeros((len(case_dict[key]),5))
+                case_array = np.zeros((len(case_dict[key]),6))
 
             data = np.asarray(case_dict[key], dtype = float)
             case_array = case_array + data
@@ -153,7 +153,7 @@ class cp:
         for data in lifetime_scale[1:]:
             sys_data = data[1:]
             if sum(sys_data) == 0.0:
-                data_flow = [0.0,0.0,0.0,0.0,0.0]
+                data_flow = [0.0,0.0,0.0,0.0,0.0,0.0]
                 case_lifetime.append(data_flow)
             else:
                 idx = cases.index(sys_data)
@@ -224,4 +224,26 @@ class cp:
 
         return f_uti
 
+    # calculate array for fit to grid ratio 
+    def cal_r_fit_array(case_lifetime):
+
+        r_gridfit_array = []
+
+        for i in range(len(case_lifetime)):
+            r_gridfit_array.append(case_lifetime[i][-2])
+
+        return r_gridfit_array
+
+    # calculate array for fit to grid ratio 
+    def cal_r_fit_ave(r_grid_fit_array):
+
+        array_non_zero = []
+
+        for data in r_grid_fit_array:
+            if data != 0.0:
+                array_non_zero.append(data)
+
+        ratio_gridfit_ave = sum(array_non_zero)/len(array_non_zero)
+
+        return ratio_gridfit_ave
 
