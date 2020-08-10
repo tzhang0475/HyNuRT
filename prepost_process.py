@@ -3,7 +3,7 @@
 # File              : prepost_process.py
 # Author            : tzhang
 # Date              : 25.11.2019
-# Last Modified Date: 05.08.2020
+# Last Modified Date: 10.08.2020
 # Last Modified By  : tzhang
 
 from matplotlib import pyplot as plt
@@ -138,6 +138,7 @@ class dataReader:
         f.close()
 
         return inData
+
 
     def _log_init_(self,inData):
         
@@ -956,7 +957,66 @@ class dataReader:
             self._PEM_data_(inData)
             self._PEM_eco_data_(inData)
 
+"""
 
+a tool for control model behavior
+
+"""
+class mod_control:
+    # a function to modify the input file
+    def mod_input(inputfile,keyword,value_new):
+
+        inbak = inputfile+'.bak'
+
+        inData = []
+        with open(inputfile,'r') as f:
+            data_ori = f.readlines()
+        f.close()
+
+        for line in data_ori:
+            line = line.partition('#')[0]
+            line = line.rstrip()
+
+            if line.rstrip():
+                inData.append(line)
+
+        if not os.path.isfile(inbak):
+            with open(inbak,'w') as f:
+                for line in data_ori:
+                    f.write(line)
+        if any(keyword in line for line in inData):
+            f = open(inputfile,'w+')
+            for line in inData:
+                if keyword in line:
+                    f.write(keyword)
+                    f.write(' = ')
+                    if isinstance(value_new,list):
+                        value_str = [str(value) for value in value_new]
+                        value_array = ', '.join(value_str)
+                        f.write(value_array)
+                    else:
+                        f.write(str(value_new))
+                    f.write('\n')
+                else:
+                    f.write(line)
+                    f.write('\n')
+            f.close()
+        else:
+            print ('Error: Keyword not defined!\n')
+
+    def mod_run(modelname,inputfile):
+
+        cmd = 'python '+str(modelname)+' '+str(inputfile) #+ ' > run_data.log'
+
+        print ('*** RUN THE MODEL ***')
+
+        os.system(cmd)
+
+    def mod_cmd(modelname,inputfile):
+
+        cmd = 'python '+str(modelname)+' '+str(inputfile) + ' > run_data.log'
+
+        return cmd 
 
 """
 
@@ -1042,6 +1102,17 @@ class post_process:
         plt.xlim(left = 0.0)
         plt.ylabel('Cash Flow ($ in Million)', fontsize = '16')
         plt.grid(linestyle='--',linewidth = '1')
+
+    # plot the progress of GA optimization
+    def plt_GA(best_score_progress):
+        plt.plot (best_score_progress)
+        plt.xlabel('Generation')
+        plt.ylabel('Best score (% target)')
+        pName = 'GA_opti.png'
+        plt.savefig(pName,dpi = 100)
+        plt.show()
+        plt.close(pName)
+
 
 
     # cash flow data writer
