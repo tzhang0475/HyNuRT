@@ -3,7 +3,7 @@
 # File              : sys_control.py
 # Author            : tzhang
 # Date              : 24.11.2019
-# Last Modified Date: 09.08.2020
+# Last Modified Date: 14.08.2020
 # Last Modified By  : tzhang
 
 import numpy as np
@@ -309,7 +309,7 @@ class balancing:
         self.dP = []
 
     # calculate the power from coupled nu-re system to h2 system (can be positive or negative)
-    def cal_to_h2sys(self,P_coupled,P_demand,Pmin_cluster):
+    def cal_to_h2sys_virtual(self,P_coupled,P_demand,Pmin_cluster):
         P_to_h2sys_array = []
 
         balancing._dP_cal_(self,P_coupled,P_demand)
@@ -358,6 +358,16 @@ class balancing:
         P_to_grid = P_coupled + P_h2_produced - P_h2_consumed
 
         return P_to_grid
+
+    # calculate the power to pem system
+    def cal_to_h2sys(self,P_h2_produced,P_h2_consumed,P_abandon):
+        P_to_h2sys_array = []
+        
+        for i in range(len(P_h2_consumed)):
+            P_to_h2sys = P_h2_consumed[i] + P_abandon[i] - P_h2_produced[i]
+            P_to_h2sys_array.append(P_to_h2sys)
+        
+        return P_to_h2sys_array
 
     # calculate ratio fit the demand
     def ratio_fit(self,P_demand,P_to_grid):
