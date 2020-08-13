@@ -3,7 +3,7 @@
 # File              : H2Cell.py
 # Author            : tzhang
 # Date              : 13.11.2019
-# Last Modified Date: 10.08.2020
+# Last Modified Date: 14.08.2020
 # Last Modified By  : tzhang
 
 """
@@ -287,6 +287,7 @@ class h2_cluster:
 
     # calculate the totol rate of hydrogen consumed
     def h2_consumed_rate(self,n_consume,t):
+        #print ('warning debug:', n_consume)
         n_tot_consume_rate = n_consume/t
 
         return n_tot_consume_rate
@@ -309,6 +310,7 @@ class h2_cluster:
     def p_unit_cal(self,P):
         P_unit = P/self.n_unit
         #P_unit = min(self.Pmax_unit,P_unit)
+        #print ('unit input',P_unit)
 
         if P_unit <= self.Pmax_unit and P_unit >= self.Pmin_unit:
             self.working_state = True      # change the state to production
@@ -530,6 +532,7 @@ class h2_system(h2_module,h2_cluster,h2_storage):
             P_pro.append(P_production)
             P_con.append(P_consumption)
             P_res.append(P_residual)
+            #print (P_production,P_consumption,P_residual)
 
         return P_pro, P_con, P_res
 
@@ -549,13 +552,15 @@ class h2_system(h2_module,h2_cluster,h2_storage):
    
     # calculate the power and hydrogen change in current time step
     def cal_curr(self,P_curr,dt):
+        #print ('input power',P_curr)
         P_unit,P_residual,n_operate = h2_cluster.p_unit_cal(self,P_curr)
         
-#        print ('power to unit ',P_unit)
-#        print ('residual power ',P_residual)
+        #print ('power to unit ',P_unit)
+        #print ('residual power ',P_residual)
+        #print (self.working_state)
         
         # calculate the hydrogen production in current time step
-        if self.working_state:        
+        if self.working_state:  
             h2_system.production_process(self,P_unit,n_operate,dt)
 
             # power consumed to generate hydrogen
@@ -578,9 +583,13 @@ class h2_system(h2_module,h2_cluster,h2_storage):
             # check whether the storage of hydrogen is sufficient
             n_consume = h2_storage.aquire_consume(self)
 
+            #print ('get stored h2', n_consume)
+
             # if not sufficient, consume all the hydrogen in the storage
             if n_consume > 0:
                 P_production = h2_system.consume_all(self,n_consume,dt)
+            elif n_consume == 0:
+                P_production = 0.0
         
         # update total stored hydrogen data
         h2_system.h2_stored(self)
