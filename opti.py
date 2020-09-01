@@ -3,7 +3,7 @@
 # File              : opti.py
 # Author            : tzhang
 # Date              : 03.08.2020
-# Last Modified Date: 10.08.2020
+# Last Modified Date: 31.08.2020
 # Last Modified By  : tzhang
 
 """
@@ -61,6 +61,7 @@ class opti_ga:
             ancestors.append(ancestor) 
     
         return ancestors
+
 
     # run the model and get scores
     def play_game(self,population,keyword,inputfile,modelname):
@@ -263,7 +264,9 @@ class opti_ga:
         # go through the generations of genetic algorithm
         for generation in range(self.max_gen):
 
-            print ('current generation',generation)
+            print ('\n')
+            print ('current population generation',generation)
+            print ('\n')
                 
             # create an empty list for new population
             children = []

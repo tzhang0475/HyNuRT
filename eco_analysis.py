@@ -3,7 +3,7 @@
 # File              : eco_analysis.py
 # Author            : tzhang
 # Date              : 26.11.2019
-# Last Modified Date: 03.08.2020
+# Last Modified Date: 27.08.2020
 # Last Modified By  : tzhang
 
 import sys
@@ -233,10 +233,10 @@ class nuclear_eco:
         self.LCOE = self.LCOE + LCOE
 
     # calculate Net Present Value (NPV)
-    def cal_NPV(self,r_discount,r_inflation):
+    def cal_NPV(self,r_discount):
 
         # calculate the real rate of interest
-        r_interest = r_discount + r_inflation
+        r_interest = r_discount
 
 
         NPV = 0
@@ -249,11 +249,11 @@ class nuclear_eco:
         self.NPV = self.NPV + NPV
     
     # calculate Internal Rate of Return (IRR)
-    def cal_IRR(self,r_discount,r_inflation):
+    def cal_IRR(self,r_discount):
 
 
         # initial guess of IRR
-        IRR = r_discount + r_inflation
+        IRR = r_discount
 
         NPV = self.NPV
 
@@ -829,7 +829,7 @@ f_uti = 0.85
 # discount rate 
 r_discount = 0.05
 # inflation rate
-r_inflation = 0.03
+#r_inflation = 0.03
 
 # energy inflation rate
 e_inflation = 0.05
@@ -874,9 +874,9 @@ print ('smr levelized cost of electricity: ',smr.LCOE, ' $/MWh')
 y_tot = lifetime+int((y_unit_construct*n_unit)/2)
 post_process.plt_cashflow(y_tot,cashflow,sub_sys1)
 
-smr.cal_NPV(r_discount,r_inflation)
+smr.cal_NPV(r_discount)
 print ('SMR net present value: ', smr.NPV, 'million $')
-smr.cal_IRR(r_discount,r_inflation)
+smr.cal_IRR(r_discount)
 print ('SMR internal rate of return: ', smr.IRR)
 
 print ('\n')
@@ -1019,10 +1019,10 @@ class wind_eco:
         self.LCOE = self.LCOE + LCOE
 
     # calculate Net Present Value (NPV)
-    def cal_NPV(self,r_discount,r_inflation):
+    def cal_NPV(self,r_discount):
 
         # calculate the real rate of interest
-        r_interest = r_discount + r_inflation
+        r_interest = r_discount 
 
         NPV = 0
 
@@ -1034,10 +1034,10 @@ class wind_eco:
         self.NPV = self.NPV + NPV
     
     # calculate Internal Rate of Return (IRR)
-    def cal_IRR(self,r_discount,r_inflation):
+    def cal_IRR(self,r_discount):
 
         # initial guess of IRR
-        IRR = r_discount + r_inflation
+        IRR = r_discount
 
         NPV = self.NPV
 
@@ -1136,7 +1136,7 @@ loc_type = 1        # 1 for land wind farm, 0 for off-shore wind farm
 # discount rate 
 r_discount = 0.05
 # inflation rate
-r_inflation = 0.025
+#r_inflation = 0.025
 
 # energy inflation rate
 e_inflation = 0.05
@@ -1175,9 +1175,9 @@ print ('wind farm levelized cost of electricity: ',wfarm.LCOE, ' $/MWh')
 y_tot = w_lifetime+1
 post_process.plt_cashflow(y_tot,cashflow,sub_sys2)
 
-wfarm.cal_NPV(r_discount,r_inflation)
+wfarm.cal_NPV(r_discount)
 print ('wind farm net present value: ', wfarm.NPV, 'million $')
-wfarm.cal_IRR(r_discount,r_inflation)
+wfarm.cal_IRR(r_discount)
 print ('wind farm internal rate of return: ', wfarm.IRR)
 
 print ('\n')
@@ -1617,9 +1617,9 @@ class system_eco:
 
         self.LCOE = LCOE
     # calculate NPV
-    def cal_NPV(self,r_discount,r_inflation):
+    def cal_NPV(self,r_discount):
         # calculate the real rate of interest
-        r_interest = r_discount + r_inflation
+        r_interest = r_discount 
 
         NPV = 0
 
@@ -1633,10 +1633,10 @@ class system_eco:
 
 
     # calculate Internal Rate of Return (IRR)
-    def cal_IRR(self,r_discount,r_inflation):
+    def cal_IRR(self,r_discount):
 
         # initial guess of IRR
-        IRR = r_discount + r_inflation
+        IRR = r_discount
 
         NPV = self.NPV
 
@@ -1695,7 +1695,7 @@ sys_lifetime = 60
 # discount rate 
 r_discount = 0.05
 # inflation rate
-r_inflation = 0.03
+#r_inflation = 0.03
 # electricty price per MWh
 price_e = 130
 
@@ -1841,8 +1841,8 @@ sys = sys_eco(sys_lifetime, year_start, year_dec)
 
 sys.cal_cashflow(sys_cashdic)
 
-sys.cal_NPV(r_discount,r_inflation)
-sys.cal_IRR(r_discount,r_inflation)
+sys.cal_NPV(r_discount)
+sys.cal_IRR(r_discount)
 
 print (sys.NPV,sys.IRR)
 """

@@ -3,7 +3,7 @@
 # File              : prepost_process.py
 # Author            : tzhang
 # Date              : 25.11.2019
-# Last Modified Date: 10.08.2020
+# Last Modified Date: 31.08.2020
 # Last Modified By  : tzhang
 
 from matplotlib import pyplot as plt
@@ -52,7 +52,7 @@ class dataReader:
         self.dollar_year = 2018     # set defalt value
 
         self.r_discount = 0.0
-        self.r_inflation = 0.0
+        #self.r_inflation = 0.0
 
         self.price_e_base = 0.0
         self.price_ePEM_base = 0.0
@@ -410,17 +410,17 @@ class dataReader:
             print ('WARNING: r_discount not defined!\n')
             print ('MESSAGE: zero discount rate is applied!\n')
 
-        if any('r_inflation' in line for line in inData):
-            for line in inData:
-                if 'r_inflation' in line:
-                    r_inflation = float(line.split('=')[-1].lstrip().rstrip())
-                    self.r_inflation = r_inflation
-        else:
-            f.write ('WARNING: r_inflation not defined!\n')
-            f.write ('MESSAGE: zero inflation rate is applied!\n')
-            f.write('\n')
-            print ('WARNING: r_inflation not defined!\n')
-            print ('MESSAGE: zero inflation rate is applied!\n')
+#        if any('r_inflation' in line for line in inData):
+#            for line in inData:
+#                if 'r_inflation' in line:
+#                    r_inflation = float(line.split('=')[-1].lstrip().rstrip())
+#                    self.r_inflation = r_inflation
+#        else:
+#            f.write ('WARNING: r_inflation not defined!\n')
+#            f.write ('MESSAGE: zero inflation rate is applied!\n')
+#            f.write('\n')
+#            print ('WARNING: r_inflation not defined!\n')
+#            print ('MESSAGE: zero inflation rate is applied!\n')
 
         if any('price_e_base' in line for line in inData):
             for line in inData:
@@ -1008,6 +1008,7 @@ class mod_control:
 
         cmd = 'python '+str(modelname)+' '+str(inputfile) #+ ' > run_data.log'
 
+        print ('\n')
         print ('*** RUN THE MODEL ***')
 
         os.system(cmd)
