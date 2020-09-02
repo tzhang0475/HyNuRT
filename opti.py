@@ -3,7 +3,7 @@
 # File              : opti.py
 # Author            : tzhang
 # Date              : 03.08.2020
-# Last Modified Date: 31.08.2020
+# Last Modified Date: 01.09.2020
 # Last Modified By  : tzhang
 
 """
@@ -98,8 +98,6 @@ class opti_ga:
         print ('system score is:', max(scores))
         return scores
 
-    # calculator of score in 
-    
     # a function to select qualified population 
     def killer(self,population,scores,seed = None):
         
