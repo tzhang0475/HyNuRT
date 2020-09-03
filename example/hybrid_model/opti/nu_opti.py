@@ -3,7 +3,7 @@
 # File              : nu_opti.py
 # Author            : tzhang
 # Date              : 08.08.2020
-# Last Modified Date: 31.08.2020
+# Last Modified Date: 03.09.2020
 # Last Modified By  : tzhang
 """
 
@@ -81,7 +81,7 @@ class game:
         mc.mod_input(inputfile,keyword,input_data)
         mc.mod_run(modelname,inputfile)
 
-        r_suv = game.evaluate()
+        r_suv = game.evaluate()[0]
 
         return r_suv
 
