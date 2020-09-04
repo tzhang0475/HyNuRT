@@ -3,7 +3,7 @@
 # File              : opti.py
 # Author            : tzhang
 # Date              : 03.08.2020
-# Last Modified Date: 01.09.2020
+# Last Modified Date: 03.09.2020
 # Last Modified By  : tzhang
 
 """
@@ -93,8 +93,6 @@ class opti_ga:
                     para2 = float(line.split(':')[-1].lstrip().rstrip())
                     para2_array.append(para2)
         f.close()
-        print (para1_array,para2_array)
-        sys.exit()
         print ('system score is:', max(scores))
         return scores
 

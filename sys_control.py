@@ -3,7 +3,7 @@
 # File              : sys_control.py
 # Author            : tzhang
 # Date              : 24.11.2019
-# Last Modified Date: 17.08.2020
+# Last Modified Date: 04.09.2020
 # Last Modified By  : tzhang
 
 import numpy as np
@@ -354,8 +354,16 @@ class balancing:
 
 
     # calculate the power to the grid
-    def cal_to_grid(self,P_coupled,P_h2_produced,P_h2_consumed):
-        P_to_grid = P_coupled + P_h2_produced - P_h2_consumed
+    def cal_to_grid(self,P_demand,P_coupled,P_h2_produced,P_h2_consumed):
+        P_to_grid = []
+        for i in range(len(P_demand)):
+            P = P_coupled[i] + P_h2_produced[i] - P_h2_consumed[i]
+
+            if P >= P_demand[i]:
+                P_to_grid.append(P_demand[i])
+            else:
+                P_to_grid.append(P)
+
 
         return P_to_grid
 
@@ -422,4 +430,17 @@ class balancing:
         return e_acc_to_h2sys,e_acc_from_h2sys,e_acc_net_h2sys
 
 
+    # calculate total energy abondoned, in MWh
+    def cal_e_abandon(self,P_res,time): 
+        e_abandon = [0.0]
+        e_acc_abandon = [0.0]
+        for i in range(1,len(time)):
+            e_ab = P_res[i-1] * (time[i]-time[i-1])  # please note the unit of time is min here
+            e_ab = e_ab/60.0    # convert MWmin to MWh
+            e_ab_acc = e_acc_abandon[i-1] + e_ab
+
+            e_abandon.append(e_ab)
+            e_acc_abandon.append(e_ab_acc)
+
+        return e_abandon, e_acc_abandon
 

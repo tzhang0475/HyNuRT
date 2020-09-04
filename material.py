@@ -3,7 +3,7 @@
 # File              : material.py
 # Author            : tzhang
 # Date              : 28.10.2019
-# Last Modified Date: 05.11.2019
+# Last Modified Date: 17.08.2020
 # Last Modified By  : tzhang
 
 # a library for material properties
@@ -19,3 +19,5 @@ class air:
 
         self.density = self.density+density
 
+    def ideal(self):
+        pass
