@@ -3,7 +3,7 @@
 # File              : prepost_process.py
 # Author            : tzhang
 # Date              : 25.11.2019
-# Last Modified Date: 03.09.2020
+# Last Modified Date: 06.09.2020
 # Last Modified By  : tzhang
 
 from matplotlib import pyplot as plt
@@ -1028,19 +1028,62 @@ class post_process:
 
     # plot the grid demand and the system generatrion
     def plt_grid_balance(label,time,P_demand,P_to_grid):
-        plt.figure(figsize = (12,8))
-        plt.plot(time,P_demand, color = 'g',label = 'grid demand')
-        plt.plot(time,P_to_grid, color = 'b', label = 'system deliver')
+        plt.figure(figsize = (22,8))
+        plt.plot(time,P_demand, linewidth = 4, color = 'g',label = 'grid demand')
+        plt.plot(time,P_to_grid,linewidth = 4, color = 'r', label = 'system deliver')
+        plt.xticks(fontsize = '20')
+        plt.yticks(fontsize = '20')
         plt.legend()
-        plt.xlabel('Time (min)',fontsize = '16')
+        plt.xlabel('Time (min)',fontsize = '20')
         plt.xlim(left = 0.0)
-        plt.ylabel('Power (MW)', fontsize = '16')
+        plt.ylabel('Power (MW)', fontsize = '20')
+        plt.legend(prop = {'size':20})
         plt.grid(linestyle='--',linewidth = '1')
 
         pltName = 'grid_blance_'+label+'.png'
         plt.savefig(pltName,dpi = 100)
 
+        plt.clf()
         plt.close(pltName)
+
+    # plot the un-satisfied demand
+    def plt_grid_unfit(infile_labels,time_dict,P_demand_dict,P_to_grid_dict):
+
+        for key in P_demand_dict.keys():
+            n_cases = len(P_demand_dict[key])
+            break
+        key_list = list(P_demand_dict.keys())
+        
+        for n in range(n_cases):
+            case_label = 'case_'+str(n+1)
+
+            plt.figure(figsize = (22,8))
+            for key in P_demand_dict.keys():
+                idxkey = key_list.index(key)
+
+                # calculate unfiteed power
+                unfitted_power = []
+                for j in range(len(time_dict[key][n])):
+                    dP = P_demand_dict[key][n][j] - P_to_grid_dict[key][n][j]
+                    unfitted_power.append(dP)
+    
+                plt.plot(time_dict[key][n],unfitted_power, linewidth = 4,color = np.random.rand(3,),label = str(infile_labels[idxkey]))
+   
+            plt.xticks(fontsize = '20')
+            plt.yticks(fontsize = '20')
+            plt.legend()
+            plt.legend(prop = {'size':20})
+            plt.xlabel('Time (min)',fontsize = '20')
+            plt.xlim(left = 0.0)
+            plt.ylabel('Power (MW)', fontsize = '20')
+            plt.grid(linestyle='--',linewidth = '1')
+    
+            pltName = 'unfitted_'+case_label+'.png'
+            plt.savefig(pltName,dpi = 100)
+    
+            plt.clf()
+            plt.close(pltName)
+
 
     # plot the stored mass of hydrogen
     def plt_h2_stored(label,time,m_stored_data):
@@ -1076,9 +1119,11 @@ class post_process:
 
         plt.figure(figsize = (14,8))
         plt.plot(year,cashflow, color = 'firebrick',linewidth = '3',marker = 'o', markersize = '5')
-        plt.xlabel('year',fontsize = '16')
+        plt.xticks(fontsize = '20')
+        plt.yticks(fontsize = '20')
+        plt.xlabel('year',fontsize = '20')
         plt.xlim(left = 0.0)
-        plt.ylabel('Cash Flow ($ in Million)', fontsize = '16')
+        plt.ylabel('Cash Flow ($ in Million)', fontsize = '20')
         plt.grid(linestyle='--',linewidth = '1')
 
         pltName = label+'_'+'cashflow.png'
