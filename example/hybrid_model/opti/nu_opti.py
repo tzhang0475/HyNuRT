@@ -3,7 +3,7 @@
 # File              : nu_opti.py
 # Author            : tzhang
 # Date              : 08.08.2020
-# Last Modified Date: 03.09.2020
+# Last Modified Date: 05.09.2020
 # Last Modified By  : tzhang
 """
 
@@ -93,7 +93,7 @@ if __name__ == '__main__':
     infile = 'input'
     keyword = 'n_units'
     
-    n_units_ref = [4,50,220]
+    n_units_ref = [4,180,300]
     n_sigma = [2,30,30]
     pop_size = 10
     max_gen = 20

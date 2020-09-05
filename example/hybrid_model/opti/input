@@ -1,138 +1,58 @@
-###############################################
-# title of the case
-###############################################
 title = Nu-Re Model
-label = system      # label should be a string without space
-###############################################
-# configration of the hybrid system
-###############################################
-# input for electrical grid 
+label = system
 dataMode = 0
 inFile = UK_gridwatch_year2018_Jan.csv, UK_gridwatch_year2018_Apr.csv, UK_gridwatch_year2018_Jul.csv, UK_gridwatch_year2018_Oct.csv
-multiplier = 0.01
-
-###############################################
-# hybrid system config
+multiplier = 0.02
 components = SMR, wind, PEM, storage
 num_chars = 00, 01, 10, 20
-unit_power = 100.0, 2.0, 0.5, 0.0
-n_units = 6, 66, 210, 1
+unit_power = 100.0, 2.4, 0.5, 0.0
+n_units = 7, 150, 6, 1
 lifetimes =  60, 30, 20, 60
 con_time = 2, 1, 1, 1
-
 sys_lifetime = 60
-
-# hybrid system control parameter
-# data selection time scale
 time_interval = 60.0
-# auto construction scheme
 auto_con = 1
-# length of the time array
-#len_time = 289
-###############################################
-
-
-###############################################
-# economic data of the hybrid system
-###############################################
 dollar_year = 2018
-
-# discount rate 
 r_discount = 0.05
-
-
-price_e_base = 110                      # electricty price per MWh
-price_ePEM_base = 0.0                    # electricty price per MWh
-price_h2_base = 14.0                     # price of h2 per kg
-
-###############################################
-# wind data
+price_e_base = 110
+price_ePEM_base = 0.0
+price_h2_base = 14.0
 v_max = 28.0
 v_mean = 11.0
 n_range = 40
-
-# wind turbine data
-d_wing = 90 # in m,  wind turbine diameter
-J_turbine = 1.3E7 # in kg.m^2, moment of initia of turbine
-h_hub = 50 # in m, the height of the hub
-
+d_wing = 90
+J_turbine = 1.3E7
+h_hub = 50
 cut_in = 4.0
 cut_out = 25.0
-
-loc_type = 1        # 1 for land wind farm, 0 for off-shore wind farm
-
-# captical cost of a wind turbine per kW
-w_cost_kW = 1590      # $ per kW 
-
-# om cost of a wind turbine per MWh
-w_om_cost_MWh = 14.4
-
-# decommissioning cost of a wind turbine per MWh
+loc_type = 1
+w_cost_kW = 1470
+w_om_cost_MWh = 12.1
 w_dcms_cost_MWh = 4.0
-
-
-###############################################
-
-
-
-###############################################
-# SMR module data
 LF_lim = 0.05
-
-
-# whether first of a kind, 1 for yes, 0 for no
 FOAK = 1
-
-eta_direct = 0.51              # oecd nea value, large uncentainty
-eta_indirect = 0.51              # oecd nea value, large uncentainty
-
-# operation and maintainess cost, dollar per MWh 
-nu_om_cost_MWh = 25.8  
-# fuel cost, dollar per MWh 
+eta_direct = 0.51
+eta_indirect = 0.51
+nu_om_cost_MWh = 25.8
 nu_fuel_cost_MWh = 8.26
-# decommisioning cost per MWh
-nu_dcms_cost_MWh = 0.16 
-
-# config learning factors
+nu_dcms_cost_MWh = 0.16
 x_learn = 0.15
 y_learn = 0.74
 z_learn = 0.82
 k_learn = 0.02
-
-# technology learning rate
 r_learning = 0.04
-
-###############################################
-
-
-
-###############################################
-# hydrogen cell data
-theta_m = 0.13     # the thickness of membrane, in mm
-A_m = 32             # the area of the membrane, in cm^2
-T_op = 90             # in C
-
-P_h2 = 1e5         # pressure of the system in pa 
+theta_m = 0.13
+A_m = 32
+T_op = 90
+P_h2 = 1e5
 P_o2 = 1e5
 P_h2o = 2e5
-
 alpha_an = 0.5
 alpha_cat = 0.5
-
-i0_an = 1e-7   # in A/cm^2
-i0_cat = 1e-3  # in A/cm^2
-
-iter_max = 5000 # maximum number of iterations
-
-###############################################
-
-
-
-###############################################
-# hydrogen cluster and storage data
-Pmin_unit = 0.05    # minimum power of a cell
-
-m_store = 0          # initial storage, in kg
-
-capex_kW = 1200     # capital cost per kW
-cap_op_ratio = 0.02 # capital cost operational cost ratio
+i0_an = 1e-7
+i0_cat = 1e-3
+iter_max = 5000
+Pmin_unit = 0.05
+m_store = 0
+capex_kW = 1200
+cap_op_ratio = 0.02

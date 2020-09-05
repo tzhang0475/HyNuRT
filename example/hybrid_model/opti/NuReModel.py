@@ -3,7 +3,7 @@
 # File              : NuReModel.py
 # Author            : tzhang
 # Date              : 20.11.2019
-# Last Modified Date: 27.08.2020
+# Last Modified Date: 04.09.2020
 # Last Modified By  : tzhang
 
 """
@@ -293,6 +293,9 @@ for inFile in inFile_Array:
         ###############################################
         # create modules in the system
         ###############################################
+        # balance controller 
+        balance_control = balancing()
+
         w_turbine = wind_Turbine(d_wing,J_turbine,h_hub,w_P_unit,cut_in,cut_out)  # wind turbine
         w_farm = wind_farm(n_unit_wind_op)   # wind farm
         
@@ -357,7 +360,6 @@ for inFile in inFile_Array:
         Pmin_cluster = h2_sys.Pmin_system()
         #print ('minimun power for h2 cluster ',Pmin_cluster)
         
-        balance_control = balancing()
         P_to_h2sys_virtual = balance_control.cal_to_h2sys_virtual(P_coupled,P_demand,Pmin_cluster)
         #print ('power to h2 system virtual', P_to_h2sys_virtual)
         
@@ -366,9 +368,11 @@ for inFile in inFile_Array:
         # modelling hydrogen cells 
         ###############################################
         P_h2_produced,P_h2_consumed,P_abandon = h2_sys.cal(P_to_h2sys_virtual,time)
-        
+       
+        #print ('virtual power to h2 system', P_to_h2sys_virtual)
         #print ('h2 produces power ', P_h2_produced)
         #print ('h2 consumed power ', P_h2_consumed)
+        #sys.exit()
         m_tot = h2_sys.aquire_m()
         #print ('\n')
         #print ('total storage',m_tot, ' kg')
@@ -381,11 +385,11 @@ for inFile in inFile_Array:
         e_acc_to_h2sys,e_acc_from_h2sys,e_acc_net_h2sys =\
                 balance_control.cal_e_acc_h2sys(P_to_h2sys,time)
         # calculate total ernegy abondaned and accumulated abandoned energy
-        e_abandon,e_acc_abandon = h2_sys.cal_e_abandon(P_abandon,time)
+        e_abandon,e_acc_abandon = balance_control.cal_e_abandon(P_abandon,time)
         ###################################################
         # calculate the powet to the grid 
         ###################################################
-        P_to_grid = balance_control.cal_to_grid(P_coupled,P_h2_produced,P_h2_consumed)
+        P_to_grid = balance_control.cal_to_grid(P_demand,P_coupled,P_h2_produced,P_h2_consumed)
         #print ('power to grid ', P_to_grid)
 
         # calculate to ratio fit to the grid demand 
@@ -400,7 +404,7 @@ for inFile in inFile_Array:
         #print ('grid demand ', P_demand)
         #print ('abandoned power ',P_abandon)
         #print ('stored hydrogen ', m_stored_data)
-        
+        #print ('\n')
         
         ###################################################
         # post processing of data 
