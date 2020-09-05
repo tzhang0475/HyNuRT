@@ -3,7 +3,7 @@
 # File              : H2Cell.py
 # Author            : tzhang
 # Date              : 13.11.2019
-# Last Modified Date: 04.09.2020
+# Last Modified Date: 06.09.2020
 # Last Modified By  : tzhang
 
 """
@@ -407,10 +407,10 @@ class h2_storage:
         n_store_new = self.n_store + n_tot
 
         # define maximum output once the storage is not sufficient
-        if n_store_new < 0.0:
+        if n_store_new <= 0.0:
             self.output_max = self.n_store
         else:
-            self.output_max = 0.0   # no consumption during this period
+            self.output_max = -1   # flag indicates consume according to demand
 
         self.n_store = n_store_new
         self.n_store = max(0.0,self.n_store)
@@ -568,15 +568,19 @@ class h2_system(h2_module,h2_cluster,h2_storage):
            
             
             # check whether the storage of hydrogen is sufficient
-            n_consume = h2_storage.aquire_consume(self)
 
-            #print ('get stored h2', n_consume)
+            # get the limit of hydrogen consume (>0 for exceed stored hygrogen, else for not)
+            n_consume_lim = h2_storage.aquire_consume(self)
+
+            #print ('get stored h2', n_consume_lim)
 
             # if not sufficient, consume all the hydrogen in the storage
-            if n_consume > 0:
-                P_production = h2_system.consume_all(self,n_consume,dt)
-            elif n_consume == 0:
-                P_production = 0.0
+            if n_consume_lim >= 0:
+                P_production = h2_system.consume_all(self,n_consume_lim,dt)
+            #elif n_consume == 0:
+                #P_production = 0.0
+
+            #print ('h2 generate power', P_production)
         
         # update total stored hydrogen data
         h2_system.h2_stored(self)
