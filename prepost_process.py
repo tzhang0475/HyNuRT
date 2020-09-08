@@ -3,7 +3,7 @@
 # File              : prepost_process.py
 # Author            : tzhang
 # Date              : 25.11.2019
-# Last Modified Date: 06.09.2020
+# Last Modified Date: 07.09.2020
 # Last Modified By  : tzhang
 
 from matplotlib import pyplot as plt
@@ -1057,7 +1057,7 @@ class post_process:
         for n in range(n_cases):
             case_label = 'case_'+str(n+1)
 
-            plt.figure(figsize = (22,8))
+            plt.figure(figsize = (24,6))
             for key in P_demand_dict.keys():
                 idxkey = key_list.index(key)
 
@@ -1079,6 +1079,40 @@ class post_process:
             plt.grid(linestyle='--',linewidth = '1')
     
             pltName = 'unfitted_'+case_label+'.png'
+            plt.savefig(pltName,dpi = 100)
+    
+            plt.clf()
+            plt.close(pltName)
+
+    # plot h2 storage of different months 
+    def plt_h2_storage(infile_labels,time_dict,h2_dict):
+
+        for key in h2_dict.keys():
+            n_cases = len(h2_dict[key])
+            break
+        key_list = list(h2_dict.keys())
+        
+        for n in range(n_cases):
+            case_label = 'case_'+str(n+1)
+
+            plt.figure(figsize = (14,6))
+            for key in h2_dict.keys():
+                idxkey = key_list.index(key)
+
+                plt.plot(time_dict[key][n],h2_dict[key][n][0:len(time_dict[key][n])], linewidth = 4,color = np.random.rand(3,),label = str(infile_labels[idxkey]))
+   
+            plt.xticks(fontsize = '20')
+            plt.yticks(fontsize = '20')
+            plt.ticklabel_format(axis='y',style='sci',scilimits=(3,3))
+            plt.rc('font',size=16)
+            plt.legend()
+            plt.legend(prop = {'size':20})
+            plt.xlabel('Time (min)',fontsize = '20')
+            plt.xlim(left = 0.0)
+            plt.ylabel('Hydrogen Storage (kg)', fontsize = '20')
+            plt.grid(linestyle='--',linewidth = '1')
+    
+            pltName = 'h2_store_'+case_label+'.png'
             plt.savefig(pltName,dpi = 100)
     
             plt.clf()
@@ -1118,7 +1152,7 @@ class post_process:
         year = np.arange(0,n_year,1) 
 
         plt.figure(figsize = (14,8))
-        plt.plot(year,cashflow, color = 'firebrick',linewidth = '3',marker = 'o', markersize = '5')
+        plt.plot(year,cashflow, color = 'firebrick',linewidth = '4',marker = 'o', markersize = '5')
         plt.xticks(fontsize = '20')
         plt.yticks(fontsize = '20')
         plt.xlabel('year',fontsize = '20')
@@ -1138,7 +1172,7 @@ class post_process:
         plt.figure(figsize = (14,8))
 
         # plot overall system cash flow
-        plt.plot(year,cashflow, color = 'firebrick',linewidth = '3',marker = 'o', markersize = '5', label = 'system')
+        plt.plot(year,cashflow, color = 'firebrick',linewidth = '4',marker = 'o', markersize = '5', label = 'system')
 
         # plot cash flow of each component
         for key in cashdic.keys():
