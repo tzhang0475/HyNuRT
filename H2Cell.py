@@ -407,8 +407,10 @@ class h2_storage:
         n_store_new = self.n_store + n_tot
 
         # define maximum output once the storage is not sufficient
-        if n_store_new <= 0.0:
+        if n_store_new < 0.0:
             self.output_max = self.n_store
+        elif n_store_new == 0.0:
+            self.output_max = self.n_store   
         else:
             self.output_max = -1   # flag indicates consume according to demand
 
@@ -575,10 +577,10 @@ class h2_system(h2_module,h2_cluster,h2_storage):
             #print ('get stored h2', n_consume_lim)
 
             # if not sufficient, consume all the hydrogen in the storage
-            if n_consume_lim >= 0:
+            if n_consume_lim > 0:
                 P_production = h2_system.consume_all(self,n_consume_lim,dt)
-            #elif n_consume == 0:
-                #P_production = 0.0
+            elif n_consume_lim == 0:
+                P_production = 0.0
 
             #print ('h2 generate power', P_production)
         
