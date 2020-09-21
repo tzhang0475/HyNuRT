@@ -3,7 +3,7 @@
 # File              : windData.py
 # Author            : tzhang
 # Date              : 26.10.2019
-# Last Modified Date: 25.11.2019
+# Last Modified Date: 15.09.2020
 # Last Modified By  : tzhang
 
 # module to read or generate Rayleigh Distribution winddata
@@ -133,11 +133,13 @@ class wind_Rayleigh(wind_Data):
         v_data = self.v_data[1:]
         plt.figure(figsize = (12,8))
         plt.bar(v_data,self.pdf, color = 'c')
-        plt.xlabel('Wind Velocity (m/s)',fontsize = '16')
+        plt.xlabel('Wind Velocity (m/s)',fontsize = '20')
         plt.xlim(left = 0.0)
         step = 0.0+max(self.v_data)/self.n
-        plt.xticks(np.arange(0.0,(max(self.v_data)+step),step))
-        plt.ylabel('Probability', fontsize = '16')
+        plt.xticks(np.arange(0.0,(max(self.v_data)+2*step),2*step))
+        plt.ylabel('Probability', fontsize = '20')
+        plt.xticks(fontsize='20')
+        plt.yticks(fontsize='20')
         plt.grid(linestyle='--',linewidth = '1')
 
         pltName = 'wind_v_Rayleigh.png'

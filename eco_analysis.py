@@ -3,7 +3,7 @@
 # File              : eco_analysis.py
 # Author            : tzhang
 # Date              : 26.11.2019
-# Last Modified Date: 07.09.2020
+# Last Modified Date: 21.09.2020
 # Last Modified By  : tzhang
 
 import sys
@@ -228,7 +228,7 @@ class nuclear_eco:
         LCOE = cost/production  # unit in $/MWh
 
 
-        print ('smr levelized cost of electricity: ',LCOE, ' $/MWh')
+        #print ('smr levelized cost of electricity: ',LCOE, ' $/MWh')
 
         self.LCOE = self.LCOE + LCOE
 
@@ -310,7 +310,13 @@ class nuclear_eco:
 #        print ('modular factor: ', f_modular)
         f_config_learning = self.config_learning_factor(x,y,z,k)
 #        print ('config learning rate: ', f_config_learning)
-        f_tech_learning = self.tech_learning_factor(x,r_learning)
+
+        if self.FOAK and self.n_unit > 1: 
+            f_tech_learning = 1.0
+        elif not self.FOAK and self.n_unit>1:
+            f_tech_learning = self.tech_learning_factor(x,r_learning)
+        else:
+            f_tech_learning = 1.0
 #        print ('technology learning rate: ', f_tech_learning)
 
         occ = self.unit_cost_tot*self.n_unit * f_cosite * f_modular * f_config_learning * f_tech_learning

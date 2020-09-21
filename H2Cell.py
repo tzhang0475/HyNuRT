@@ -3,7 +3,7 @@
 # File              : H2Cell.py
 # Author            : tzhang
 # Date              : 13.11.2019
-# Last Modified Date: 06.09.2020
+# Last Modified Date: 16.09.2020
 # Last Modified By  : tzhang
 
 """
@@ -44,7 +44,7 @@ class h2_module:
         self.i0_an = i0_an # in A/cm^2
 
         # the degree of humidification
-        self.lambda_h = 25 # an assumed value
+        self.lambda_h = 20 # an assumed value
 
         # a symbol for current 
         self.I_sbl = 0 
