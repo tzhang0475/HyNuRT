@@ -3,7 +3,7 @@
 # File              : prepost_process.py
 # Author            : tzhang
 # Date              : 25.11.2019
-# Last Modified Date: 07.09.2020
+# Last Modified Date: 26.09.2020
 # Last Modified By  : tzhang
 
 from matplotlib import pyplot as plt
@@ -894,10 +894,10 @@ class dataReader:
 
             Pmin_unit = P_pem * 0.1
             f.write ('MESSAGE: default set P MIN unit as 10% of MAX!\n')
-            f.write ('MESSAGE: Pmin_unit = '+str(Pmin_uint)+'\n')
+            f.write ('MESSAGE: Pmin_unit = '+str(Pmin_unit)+'\n')
             f.write('\n')
             print ('MESSAGE: default set P MIN unit as 10% of MAX!\n')
-            print ('MESSAGE: Pmin_unit = ',str(Pmin_uint),'\n')
+            print ('MESSAGE: Pmin_unit = ',str(Pmin_unit),'\n')
 
         if any('m_store' in line for line in inData):
             for line in inData:
@@ -1060,6 +1060,12 @@ class post_process:
             plt.figure(figsize = (24,6))
             for key in P_demand_dict.keys():
                 idxkey = key_list.index(key)
+                
+                # convert time to days
+                days = []
+                for i in range(len(time_dict[key][n])):
+                    day = time_dict[key][n][i]/1440.0
+                    days.append(day)
 
                 # calculate unfiteed power
                 unfitted_power = []
@@ -1067,7 +1073,7 @@ class post_process:
                     dP = P_demand_dict[key][n][j] - P_to_grid_dict[key][n][j]
                     unfitted_power.append(dP)
     
-                plt.plot(time_dict[key][n],unfitted_power, linewidth = 4,color = np.random.rand(3,),label = str(infile_labels[idxkey]))
+                plt.plot(days,unfitted_power, linewidth = 4,color = np.random.rand(3,),label = str(infile_labels[idxkey]))
    
             plt.xticks(fontsize = '20')
             plt.yticks(fontsize = '20')
@@ -1098,6 +1104,12 @@ class post_process:
             plt.figure(figsize = (14,6))
             for key in h2_dict.keys():
                 idxkey = key_list.index(key)
+
+                # convert time to days
+                days = []
+                for i in range(len(time_dict[key][n])):
+                    day = time_dict[key][n][i]/1440.0
+                    days.append(day)
 
                 plt.plot(time_dict[key][n],h2_dict[key][n][0:len(time_dict[key][n])], linewidth = 4,color = np.random.rand(3,),label = str(infile_labels[idxkey]))
    
