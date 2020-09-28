@@ -3,7 +3,7 @@
 # File              : sys_control.py
 # Author            : tzhang
 # Date              : 24.11.2019
-# Last Modified Date: 04.09.2020
+# Last Modified Date: 28.09.2020
 # Last Modified By  : tzhang
 
 import numpy as np
@@ -155,11 +155,32 @@ class con_plan(sys_config):
 
         # construction plan when there is no npp
         else:
-            #########################
-            #### to be developed ####
-            #########################
-            pass  
+            unit_renew = []
+            unit_couple = []
 
+            # matching scale of units, for example, 1 npp to 20 wind and 40 PEM
+            for key in self.config.keys():
+                if self.config[key][0].startswith('0') and self.config[key][0] != '00':
+                    unit_renew.append(self.config[key][2])
+                    char.append(self.config[key][0])
+                elif self.config[key][0].startswith('1'):
+                    unit_couple.append(self.config[key][2])
+                    char.append(self.config[key][0])
+
+            sys_scale.append(char)
+
+            scale = []
+            for i in range(len(unit_renew)+len(unit_couple)):
+                scale.append(0.0)
+            sys_scale.append(scale)
+            
+            scale = []
+            for n_uni in unit_renew:
+                scale.append(n_uni)
+
+            for n_uni in unit_couple:
+                scale.append(n_uni)
+            sys_scale.append(scale)
 
         return sys_scale       
 
@@ -173,13 +194,11 @@ class con_plan(sys_config):
                 unit_power.append(self.config[key][1])
                 n_units.append(self.config[key][2])
 
-
         # calculate nominal capacity
         nomi_power = 0.0
         for i in range(len(n_units)):
             power = n_units[i] * unit_power[i]
             nomi_power = nomi_power + power
-
         for i in range(1,len(sys_scale)):
             capacity = 0
             for j in range(len(unit_power)):
@@ -233,16 +252,19 @@ class con_plan(sys_config):
 
         con_time_tmp = np.asarray(con_time,dtype=int)
 
+
         # char of core component
         char_comp = con_time[np.argmax(con_time_tmp[:,2])][0]
-        # number of units of core component
+
+        # number of units of npp component or if no nuclear, a batch do the work
         unit_comp = con_time[np.argmax(con_time_tmp[:,2])][1]
+
         # years needed for construction
         y_unit_construct = np.max(con_time_tmp[:,2])
 
         # calculate duration for construction
-        y_construction = unit_comp * y_unit_construct
-
+        #y_construction = unit_comp * y_unit_construct
+        y_construction = (len(self.sys_scale)-1) * y_unit_construct
 
         # find the column of core comp in sys_scale array
         col = self.sys_scale[0].index(char_comp)
@@ -265,11 +287,14 @@ class con_plan(sys_config):
         name_idx.append('capacity ratio')
         
         lifetime_scale.append(name_idx)
-
+        
         for i in range (self.lifetime + int(y_construction/2)):
 #        for i in range (y_construction+2):
             data = []
-            unit_done = min(int((i-1)/y_unit_construct),unit_comp)
+            if char_comp == '00':
+                unit_done = min(max(0,int((i-1)/y_unit_construct)),unit_comp)
+            else:
+                unit_done = unit_comp
             data.append(i)
             data.append(unit_done)
             # scale matching
