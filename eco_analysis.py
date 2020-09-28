@@ -3,7 +3,7 @@
 # File              : eco_analysis.py
 # Author            : tzhang
 # Date              : 26.11.2019
-# Last Modified Date: 21.09.2020
+# Last Modified Date: 28.09.2020
 # Last Modified By  : tzhang
 
 import sys
@@ -1652,7 +1652,7 @@ class system_eco:
 
         n_iter = 0
 
-        iter_max = 100
+        iter_max = 200
 
         while abs(NPV) > epsi:
 
@@ -1668,7 +1668,7 @@ class system_eco:
                 NPV_new = NPV_new + NPV_curr
 
             if NPV_new * NPV < 0:
-                step_size = step_size/2
+                step_size = step_size/2.
 
             NPV = NPV_new
 
@@ -1678,6 +1678,12 @@ class system_eco:
                 print ('***************')
                 print ('*NOT CONVERGE!*')
                 print ('***************')
+                break
+            elif IRR > 1.0:
+                print ('***************')
+                print ('*IRR over 1.0!*')
+                print ('***************')
+                IRR = 1.0
                 break
 
         self.IRR = IRR
