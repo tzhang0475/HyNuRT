@@ -3,7 +3,7 @@
 # File              : prepost_process.py
 # Author            : tzhang
 # Date              : 25.11.2019
-# Last Modified Date: 26.09.2020
+# Last Modified Date: 29.09.2020
 # Last Modified By  : tzhang
 
 from matplotlib import pyplot as plt
@@ -1071,12 +1071,15 @@ class post_process:
                 unfitted_power = []
                 for j in range(len(time_dict[key][n])):
                     dP = P_demand_dict[key][n][j] - P_to_grid_dict[key][n][j]
+                    if dP < 1e-10:
+                        dP = 0.0
                     unfitted_power.append(dP)
     
                 plt.plot(days,unfitted_power, linewidth = 4,color = np.random.rand(3,),label = str(infile_labels[idxkey]))
    
             plt.xticks(fontsize = '20')
             plt.yticks(fontsize = '20')
+            plt.rc('font',size=16)
             plt.legend()
             plt.legend(prop = {'size':20})
             plt.xlabel('Time (min)',fontsize = '20')
