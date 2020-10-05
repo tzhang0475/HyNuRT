@@ -331,9 +331,10 @@ class opti_ga:
         postp.plt_GA(self.best_score_progress)
 
         with open ('ga_data.txt','w+') as f:
-            for i in range(len(self.best_score_progress):
+            for i in range(len(self.best_score_progress)):
                     f.write(str(i+1)+'  ')
                     f.write(str(self.best_score_progress[i])+'\n')
+        f.close()
 
 
 """
