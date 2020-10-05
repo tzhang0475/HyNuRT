@@ -3,7 +3,7 @@
 # File              : eco_model.py
 # Author            : tzhang
 # Date              : 29.07.2020
-# Last Modified Date: 03.08.2020
+# Last Modified Date: 27.08.2020
 # Last Modified By  : tzhang
 
 import sys
@@ -87,7 +87,7 @@ f_uti = 0.85
 # discount rate 
 r_discount = 0.05
 # inflation rate
-r_inflation = 0.03
+#r_inflation = 0.03
 
 # energy inflation rate
 e_inflation = 0.05
@@ -133,9 +133,9 @@ print ('smr levelized cost of electricity: ',smr.LCOE, ' $/MWh')
 y_tot = lifetime+int((y_unit_construct*n_unit)/2)
 post_process.plt_cashflow(y_tot,cashflow,sub_sys1)
 
-smr.cal_NPV(r_discount,r_inflation)
+smr.cal_NPV(r_discount)
 print ('SMR net present value: ', smr.NPV, 'million $')
-smr.cal_IRR(r_discount,r_inflation)
+smr.cal_IRR(r_discount)
 print ('SMR internal rate of return: ', smr.IRR)
 
 print ('\n')
@@ -154,7 +154,7 @@ w_con_time = 1
 # discount rate 
 r_discount = 0.05
 # inflation rate
-r_inflation = 0.025
+#r_inflation = 0.025
 
 # energy inflation rate
 e_inflation = 0.05
@@ -194,9 +194,9 @@ print ('wind farm levelized cost of electricity: ',wfarm.LCOE, ' $/MWh')
 y_tot = w_lifetime+1
 post_process.plt_cashflow(y_tot,cashflow,sub_sys2)
 
-wfarm.cal_NPV(r_discount,r_inflation)
+wfarm.cal_NPV(r_discount)
 print ('wind farm net present value: ', wfarm.NPV, 'million $')
-wfarm.cal_IRR(r_discount,r_inflation)
+wfarm.cal_IRR(r_discount)
 print ('wind farm internal rate of return: ', wfarm.IRR)
 
 print ('\n')

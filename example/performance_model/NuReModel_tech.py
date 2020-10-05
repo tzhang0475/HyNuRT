@@ -3,7 +3,7 @@
 # File              : NuReModel_tech.py
 # Author            : tzhang
 # Date              : 20.11.2019
-# Last Modified Date: 29.07.2020
+# Last Modified Date: 04.09.2020
 # Last Modified By  : tzhang
 
 """
@@ -31,7 +31,7 @@ from wind_turbine import *
 from material import *
 from sys_control import *
 from prepost_process import *
-from eco_analysis import *
+#from eco_analysis import *
 
 
 ###############################################
@@ -172,8 +172,8 @@ uk_grid.demand_plot()
 time = uk_grid.aquire_time()
 P_demand = uk_grid.aquire_demand()
 
-time = time[0:289]
-P_demand = P_demand[0:289]
+time = time[0:10]
+P_demand = P_demand[0:10]
 
 #time = time[0:48]
 #P_demand = P_demand[0:48]
@@ -250,7 +250,7 @@ wP_out = w_turbine.P_output(d_air, time, v_wind, cp_array)
 # modelling a wind farm 
 ###############################################
 P_windfarm = w_farm.pArray(wP_out)
-#print ('wind farm output ',P_windfarm)
+print ('wind farm output ',P_windfarm)
 w_farm.wPower_plot(time,P_windfarm)
 
 # calculate windfarm intermittence factor
@@ -262,18 +262,17 @@ f_inter = w_farm.cal_f_inter(P_windfarm,time,P_lim)
 p_unit = module.m_power()
 P_nuclear = npp.npp_power(p_unit)
 
-#print ('nuclear power ',P_nuclear)
-
-
+print ('nuclear power ',P_nuclear)
 ####################################################################
 # calculate the power produced from coupled nuclear-renewable system
 ####################################################################
 P_windfarm = np.asarray(P_windfarm)
 P_coupled = P_nuclear + P_windfarm
-#print ('electricity produced by coupled system ',P_coupled)
-#print ('grid demand ', P_demand)
+print ('electricity produced by coupled system ',P_coupled)
+print ('grid demand ', P_demand)
 
 
+sys.exit()
 
 ###################################################
 # calculate the grid and hydrogen system balancing
