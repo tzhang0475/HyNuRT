@@ -21,7 +21,7 @@ import sys
 import os
 
 # insert from different path
-sys.path.insert(1, '/home/tzhang/gitRepo/HyNuRECT/')
+sys.path.insert(1, '../../')
 
 # import libraries of package
 from grid import *
