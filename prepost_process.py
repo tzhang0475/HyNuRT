@@ -3,7 +3,7 @@
 # File              : prepost_process.py
 # Author            : tzhang
 # Date              : 25.11.2019
-# Last Modified Date: 29.09.2020
+# Last Modified Date: 05.10.2020
 # Last Modified By  : tzhang
 
 from matplotlib import pyplot as plt
@@ -1204,7 +1204,7 @@ class post_process:
         plt.xlabel('Generation')
         plt.ylabel('Best score (% target)')
         pName = 'GA_opti.png'
-        plt.savefig(pName,dpi = 100)
+        plt.savefig(pName,dpi = 300)
         plt.show()
         plt.close(pName)
 
