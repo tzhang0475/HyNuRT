@@ -374,11 +374,11 @@ class dataReader:
                     len_time = int(line.split('=')[-1].lstrip().rstrip())
                     self.len_time = len_time
         else:
-            f.write ('WARNING: auto_con not defined!\n')
-            f.write ('MESSAGE: auto construction sequence applied!\n')
+            f.write ('WARNING: time length not defined!\n')
+            f.write ('MESSAGE: use full length of input file!\n')
             f.write('\n')
-            print ('WARNING: auto_con not defined!\n')
-            print ('MESSAGE: auto construction sequence applied!\n')
+            print ('WARNING: time length not defined!\n')
+            print ('MESSAGE: use full length of input file!\n')
 
         f.close()
 
