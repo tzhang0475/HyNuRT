@@ -3,7 +3,7 @@
 # File              : NuReModel.py
 # Author            : tzhang
 # Date              : 20.11.2019
-# Last Modified Date: 28.09.2020
+# Last Modified Date: 05.10.2020
 # Last Modified By  : tzhang
 
 """
@@ -11,8 +11,8 @@
 a model of coupled nuclear-renewable system for a mircogrid
 
 Nuclear: nuclear power plant with n Small Modular Reactor (SMR) module, each has a maximum capacity of n MW
-Renewable: wind farm with n wind turbine, each wind turbine has maximum capacity of 2 MW, and the total capacity of the wind farm is n MW
-Hydrogen Production and Comsumption: a cluster consisted of n cells, each cell has a maximum capacity of 0.3 MW and a minimum capacity of 0.05 MW
+Renewable: wind farm with n wind turbine, each wind turbine has maximum capacity of 2.4 MW, and the total capacity of the wind farm is n MW
+Hydrogen Production and Comsumption: a cluster consisted of n cells, each cell has a maximum capacity of 1.0 MW and a minimum capacity of 0.05 MW
 
 Grid Demand: the demand data is the acutal grid data of UK in Jan, 2018. The data is scaled to 1% to simulate the grid demand of a microgrid
 
@@ -240,7 +240,8 @@ case_dict = {}
 P_demand_dict = {}
 P_to_grid_dict = {}
 time_dict = {}
-#h2_dict = {}
+if '10' in num_chars:
+    h2_dict = {}
 
 for inFile in inFile_Array:
 
@@ -271,7 +272,8 @@ for inFile in inFile_Array:
     times = []
     P_demands = []
     P_to_grids = []
-    #h2_stores = []
+    if '10' in num_chars:
+        h2_stores = []
 
     for case in cases[1:]:
     
@@ -505,7 +507,8 @@ for inFile in inFile_Array:
         P_to_grids.append(P_to_grid)
         P_demands.append(P_demand)
         
-        #h2_stores.append(m_stored_data)
+        if '10' in num_chars:
+            h2_stores.append(m_stored_data)
         # end of data set production modelling
         ###################################################
     case_dict[key_dataset] = case_data
@@ -515,7 +518,8 @@ for inFile in inFile_Array:
     P_demand_dict[key_dataset] = P_demands
     P_to_grid_dict[key_dataset] = P_to_grids
 
-    #h2_dict[key_dataset] = h2_stores
+    if '10' in num_chars:
+        h2_dict[key_dataset] = h2_stores
 
 # end of electricity produciton part modeling
 ###################################################
@@ -525,7 +529,8 @@ for inFile in inFile_Array:
 case_data_ave = cp.case_data_ave(case_dict)
 
 post_process.plt_grid_unfit(infile_labels,time_dict,P_demand_dict,P_to_grid_dict)
-#post_process.plt_h2_storage(infile_labels,time_dict,h2_dict)
+if '10' in num_chars:
+    post_process.plt_h2_storage(infile_labels,time_dict,h2_dict)
 
 # hybrid coupling
 case_lifetime = cp.case_lifetime_convert(sys_con.lifetime_scale,cases,case_data_ave)
@@ -538,6 +543,7 @@ ratio_gridfit_ave = cp.cal_r_fit_ave(r_gridfit_array)
 
 print ('to grid ratio array: ', r_gridfit_array)
 print ('to grid ratio: ', ratio_gridfit_ave)
+
 #post_process.excel_lifetime(sys_con.lifetime_scale,e_to_grid,e_to_h2,e_ab,m_h2)
 #post_process.data_lifetime('case',sys_con.lifetime_scale,e_to_grid,e_to_h2,e_ab,m_h2)
 ###############################################
@@ -610,4 +616,15 @@ with open('cal_data.txt','a') as f:
     f.write ('system internal rate of return - IRR: '+str(sys_eco.IRR)+'\n')
     f.write('\n')
 f.close()
+
+# write result to file
+with open('run.log','a') as f:
+    f.write('\n')
+    f.write('### running results ###'+'\n')
+    f.write ('total energy abandoned in lifetime (MWh) - EAB: '+str('%.2f'%sum(e_ab))+'\n')
+    f.write ('system levelized cost of electricity: '+str('%.2f'%sys_eco.LCOE)+'$/MWh'+'\n')
+    f.write ('ratio system fit the grid demands - RFG: '+str('%.4f'%ratio_gridfit_ave)+'\n')
+    f.write ('system net present value (in million $) - NPV: '+str(sys_eco.NPV)+'\n')
+    f.write ('system internal rate of return - IRR: '+str(sys_eco.IRR)+'\n')
+
 sys.exit()
