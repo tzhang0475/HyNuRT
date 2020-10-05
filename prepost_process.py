@@ -1202,7 +1202,7 @@ class post_process:
     def plt_GA(best_score_progress):
         plt.plot (best_score_progress)
         plt.xlabel('Generation')
-        plt.ylabel('Best score (% target)')
+        plt.ylabel('Best Score (% target)')
         pName = 'GA_opti.png'
         plt.savefig(pName,dpi = 300)
         plt.show()
