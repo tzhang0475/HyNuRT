@@ -3,7 +3,7 @@
 # File              : sys_control.py
 # Author            : tzhang
 # Date              : 24.11.2019
-# Last Modified Date: 28.09.2020
+# Last Modified Date: 07.10.2020
 # Last Modified By  : tzhang
 
 import numpy as np
@@ -397,7 +397,8 @@ class balancing:
         P_to_h2sys_array = []
         
         for i in range(len(P_h2_consumed)):
-            P_to_h2sys = P_h2_consumed[i] + P_abandon[i] - P_h2_produced[i]
+            #P_to_h2sys = P_h2_consumed[i] + P_abandon[i] - P_h2_produced[i]
+            P_to_h2sys = P_h2_consumed[i] - P_h2_produced[i]
             P_to_h2sys_array.append(P_to_h2sys)
         
         return P_to_h2sys_array

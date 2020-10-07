@@ -3,7 +3,7 @@
 # File              : H2Cell.py
 # Author            : tzhang
 # Date              : 13.11.2019
-# Last Modified Date: 16.09.2020
+# Last Modified Date: 07.10.2020
 # Last Modified By  : tzhang
 
 """
@@ -325,6 +325,7 @@ class h2_cluster:
 
             n_operate = self.n_unit
             P_residual = P - self.Pmax_unit*n_operate
+            P_unit = self.Pmax_unit
 
         elif P_unit < self.Pmin_unit and P_unit >= 0:
             #print ('********************* WARNING !!*******************')
@@ -553,7 +554,9 @@ class h2_system(h2_module,h2_cluster,h2_storage):
             h2_system.production_process(self,P_unit,n_operate,dt)
 
             # power consumed to generate hydrogen
-            P_consumption = P_curr
+            #P_consumption = P_curr
+            P_consumption = P_unit*n_operate
+            #print ('bench',P_unit,n_operate,P_curr,P_consumption)
 
             # power produced by hydrogen fuel cell
             P_production = 0.0
