@@ -557,7 +557,6 @@ print ('to grid ratio: ', ratio_gridfit_ave)
 
 #post_process.excel_lifetime(sys_con.lifetime_scale,e_to_grid,e_to_h2,e_ab,m_h2)
 #post_process.data_lifetime('case',sys_con.lifetime_scale,e_to_grid,e_to_h2,e_ab,m_h2)
-sys.exit()
 ###############################################
 
 ###############################################
