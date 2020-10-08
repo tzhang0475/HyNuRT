@@ -3,7 +3,7 @@
 # File              : NuReModel.py
 # Author            : tzhang
 # Date              : 20.11.2019
-# Last Modified Date: 05.10.2020
+# Last Modified Date: 08.10.2020
 # Last Modified By  : tzhang
 
 """
@@ -14,7 +14,7 @@ Nuclear: nuclear power plant with n Small Modular Reactor (SMR) module, each has
 Renewable: wind farm with n wind turbine, each wind turbine has maximum capacity of 2.4 MW, and the total capacity of the wind farm is n MW
 Hydrogen Production and Comsumption: a cluster consisted of n cells, each cell has a maximum capacity of 1.0 MW and a minimum capacity of 0.05 MW
 
-Grid Demand: the demand data is the acutal grid data of UK in Jan, 2018. The data is scaled to 1% to simulate the grid demand of a microgrid
+Grid Demand: the demand data is the acutal grid data of UK in Jan, 2018. The data is scaled to 2% to simulate the grid demand of a microgrid
 
 """
 import sys
@@ -32,9 +32,20 @@ from wind_turbine import *
 from material import *
 from sys_control import *
 from prepost_process import *
-from eco_analysis import *
+#from eco_analysis import *
 from coupling import *
 
+###############################################
+# clean data
+###############################################
+for file in os.listdir('./'):
+    if file.endswith('png') or file.endswith('log'):
+        os.remove(file)
+
+
+###############################################
+# run infomation
+###############################################
 inData = dataReader(str(sys.argv[1]))
 inData.read()
 
@@ -191,7 +202,7 @@ if '10' in num_chars:
 
 ###############################################
 print ('system units configuration: ',n_units)
-#print ('initial h2 loading: ',str(m_store))
+print ('initial h2 loading: ',str(m_store))
 
 
 ###############################################
@@ -460,12 +471,12 @@ for inFile in inFile_Array:
         # calculate total ernegy send to grid
         e_acc_to_grid = balance_control.cal_e_acc_grid(P_to_grid,time)
         
-       # print ('power generated ',P_coupled)
-       # print ('power to h2 system ', P_to_h2sys)
-       # print ('power to grid ', P_to_grid)
-       # print ('grid demand ', P_demand)
-       # print ('abandoned power ',P_abandon)
-       # print ('stored hydrogen ', m_stored_data)
+        #print ('hybrid power generated ',P_coupled)
+        #print ('power to h2 system ', P_to_h2sys)
+        #print ('power to grid ', P_to_grid)
+        #print ('grid demand ', P_demand)
+        #print ('abandoned power ',P_abandon)
+        #print ('stored hydrogen ', m_stored_data)
         
         ###################################################
         # post processing of data 
@@ -476,14 +487,14 @@ for inFile in inFile_Array:
         #post_process.data_performance('full',time,P_demand,P_coupled,P_to_grid,P_to_h2sys,P_abandon,m_stored_data)
         
         
-        time_slct, P_demand_slct, P_coupled_slct, \
-                P_to_grid_slct, P_to_h2sys_slct, P_abandon_slct,\
-                e_acc_to_grid_slct,e_acc_to_h2sys_slct, e_acc_from_h2sys_slct, e_acc_net_h2sys_slct, e_acc_abandon_slct,\
-                m_stored_data_slct = \
-                 post_process.data_opti(time,time_interval,P_demand,P_coupled,\
-                 P_to_grid,P_to_h2sys,P_abandon,\
-                 e_acc_to_grid,e_acc_to_h2sys,e_acc_from_h2sys,e_acc_net_h2sys,e_acc_abandon,\
-                 m_stored_data)
+        #time_slct, P_demand_slct, P_coupled_slct, \
+        #        P_to_grid_slct, P_to_h2sys_slct, P_abandon_slct,\
+        #        e_acc_to_grid_slct,e_acc_to_h2sys_slct, e_acc_from_h2sys_slct, e_acc_net_h2sys_slct, e_acc_abandon_slct,\
+        #        m_stored_data_slct = \
+        #         post_process.data_opti(time,time_interval,P_demand,P_coupled,\
+        #         P_to_grid,P_to_h2sys,P_abandon,\
+        #         e_acc_to_grid,e_acc_to_h2sys,e_acc_from_h2sys,e_acc_net_h2sys,e_acc_abandon,\
+        #         m_stored_data)
         #post_process.data_performance('hour_data',time_slct,P_demand_slct,\
         #        P_coupled_slct,P_to_grid_slct,P_to_h2sys_slct,P_abandon_slct,m_stored_data_slct)
         #post_process.excel_performance('hour_data',time_slct,\
@@ -546,6 +557,7 @@ print ('to grid ratio: ', ratio_gridfit_ave)
 
 #post_process.excel_lifetime(sys_con.lifetime_scale,e_to_grid,e_to_h2,e_ab,m_h2)
 #post_process.data_lifetime('case',sys_con.lifetime_scale,e_to_grid,e_to_h2,e_ab,m_h2)
+sys.exit()
 ###############################################
 
 ###############################################
