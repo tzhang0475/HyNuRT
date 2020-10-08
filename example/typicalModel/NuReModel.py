@@ -32,7 +32,7 @@ from wind_turbine import *
 from material import *
 from sys_control import *
 from prepost_process import *
-#from eco_analysis import *
+from eco_analysis import *
 from coupling import *
 
 ###############################################
