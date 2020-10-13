@@ -3,7 +3,7 @@
 # File              : NuReModel.py
 # Author            : tzhang
 # Date              : 20.11.2019
-# Last Modified Date: 08.10.2020
+# Last Modified Date: 13.10.2020
 # Last Modified By  : tzhang
 
 """
@@ -202,7 +202,8 @@ if '10' in num_chars:
 
 ###############################################
 print ('system units configuration: ',n_units)
-print ('initial h2 loading: ',str(m_store))
+if '10' in num_chars:
+    print ('initial h2 loading: ',str(m_store))
 
 
 ###############################################
