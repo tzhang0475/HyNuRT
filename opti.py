@@ -305,8 +305,16 @@ class opti_ga:
                 print ('tik')
                 if self.hourglass == 0:
                     print ('time is up!')
+                    # GA has completed required generation
+                    print('End best score: %.3f' %best_score)
+                    print ('End best data: ',seed_new[0])
                     # plot progress
                     postp.plt_GA(self.best_score_progress)
+                    with open ('ga_data.txt','w+') as f:
+                        for i in range(len(self.best_score_progress)):
+                            f.write(str(i+1)+'  ')
+                            f.write(str(self.best_score_progress[i])+'\n')
+                    f.close()
                     sys.exit()
             else:
                 seed = seed_new
