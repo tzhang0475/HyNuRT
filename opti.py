@@ -3,7 +3,7 @@
 # File              : opti.py
 # Author            : tzhang
 # Date              : 03.08.2020
-# Last Modified Date: 05.10.2020
+# Last Modified Date: 14.10.2020
 # Last Modified By  : tzhang
 
 """
@@ -247,7 +247,7 @@ class opti_ga:
         timer_reset = self.hourglass
 
         #print (seed)
-        with open('ga.log','w+') as f:
+        with open('ga.dat','w+') as f:
             f.write('begin recording'+'\n')
             for data in suvivals:
                 f.write(str(data))
@@ -314,7 +314,7 @@ class opti_ga:
                 self.hourglass = timer_reset
 
                 print ('reset')
-            with open('ga.log','a') as f:
+            with open('ga.dat','a') as f:
                 for data in suvivals:
                     f.write(str(data))
                     f.write('\n')
