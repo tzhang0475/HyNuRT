@@ -3,7 +3,7 @@
 # File              : sys_control.py
 # Author            : tzhang
 # Date              : 24.11.2019
-# Last Modified Date: 07.10.2020
+# Last Modified Date: 12.10.2020
 # Last Modified By  : tzhang
 
 import numpy as np
@@ -408,7 +408,15 @@ class balancing:
         ratio_list = []
         
         for i in range(len(P_demand)):
+            #ratio_demand = P_to_grid[i]/P_demand[i]
             ratio = P_to_grid[i]/P_demand[i]
+
+            # calculate fitting ratio
+            #if ratio_demand == 1.0:
+            #    ratio = 1.0
+            #else:
+            #    ratio = 0.0
+            
             ratio_list.append(ratio)
 
         # calculate average ratio

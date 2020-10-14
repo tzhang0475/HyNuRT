@@ -3,7 +3,7 @@
 # File              : NuReModel.py
 # Author            : tzhang
 # Date              : 20.11.2019
-# Last Modified Date: 13.10.2020
+# Last Modified Date: 14.10.2020
 # Last Modified By  : tzhang
 
 """
