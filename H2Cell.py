@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# File              : H2Cell.py
+# File              : pemModel.py
 # Author            : tzhang
 # Date              : 13.11.2019
-# Last Modified Date: 07.10.2020
+# Last Modified Date: 21.01.2021
 # Last Modified By  : tzhang
 
 """
@@ -89,6 +89,24 @@ class h2_module:
 
         return P
 
+    # calculate current voltage relationship
+    def UI_relation(self,I_dens):
+        # ideal gas constant
+        R = 8.31446261815324 #in J⋅K−1⋅mol−1
+        # Faraday constant
+        F = 96485.3329      #s A / mol or C mol^-1
+        self.I_sbl = I_dens * self.A
+        E0_rev = h2_module._E0_rev_(self)
+        E_oc = h2_module._E_oc_(self,E0_rev)
+        eta_act = h2_module._eta_act_(self)
+
+        sigma_m = h2_module._sigma_m_(self)
+        eta_ohm = h2_module._eta_ohm_(self,sigma_m)
+
+        V_oc = h2_module.V_oc(E_oc,eta_act,eta_ohm)
+
+        print ('total voltage',V_oc)
+
     # calculate the current under power    
     def I_cal(self,P):
         # ideal gas constant
@@ -167,7 +185,7 @@ class h2_module:
 
     # reverse energy 
     def _E0_rev_(self):
-        E0_rev = 1.229 - 0.9*1e-3*(self.T-298)
+        E0_rev = 1.229 - 0.9e-3*(self.T+273.15-298)
 
         return E0_rev
     
@@ -179,7 +197,7 @@ class h2_module:
         F = 96485.3329      #s A / mol or C mol^-1
 
         # log term 
-        t_log = R*self.T/(self.n*F) * np.log(self.P_h2*self.P_o2**(0.5)/self.P_h2o)
+        t_log = R*(self.T+273.15)/(self.n*F) * np.log(self.P_h2*self.P_o2**(0.5)/self.P_h2o)
 
         E_oc = E0_rev + t_log
 
@@ -208,7 +226,7 @@ class h2_module:
     # the ohmic overvoltage potential
     def _eta_ohm_(self,sigma_m):
         j = self.I_sbl/self.A
-        eta_ohm =self.theta_m * j/sigma_m
+        eta_ohm =(self.theta_m * 1e-3) * j/sigma_m
 
         return eta_ohm
 
@@ -231,8 +249,8 @@ class h2_module:
 class test
 
 theta_m = 0.13 # the thickness of membrane, in mm
-A = 16             # the area of the membrane, in cm^2
-T = 50             # in C,
+A = 160             # the area of the membrane, in cm^2
+T = 90             # in C,
 P_h2 = 1e5   # 
 P_o2 = 1e5
 P_h2o = 2e5
@@ -245,15 +263,16 @@ i0_an = 1e-7   # in A/cm^2
 
 iter_max = 5000 # maximum number of iterations
 
-P = 0.3         # in MW, the input power of the pem
+P = 5e-6         # in MW, the input power of the pem
 
 pem = h2_module(theta_m,A,alpha_an,alpha_cat,i0_an,i0_cat,T,P_h2,P_o2,P_h2o,iter_max)
 n_rate = pem.cal(P)
-
 print ('production rate',n_rate)
 
-"""
+I_dens = 0.6
+pem.UI_relation(I_dens)
 
+"""
 """
 
 a model for hydrogen cluster
