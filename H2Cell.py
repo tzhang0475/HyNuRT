@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# File              : pemModel.py
+# File              : H2Cell.py
 # Author            : tzhang
 # Date              : 13.11.2019
 # Last Modified Date: 21.01.2021
@@ -217,8 +217,11 @@ class h2_module:
         
         C_term = R*(self.T+273.15)/F
 
-        eta_an = C_term/self.alpha_an * math.asinh(i/(2*self.i0_an))
-        eta_cat = C_term/self.alpha_cat * math.asinh(i/(2*self.i0_cat))
+        #eta_an = C_term/self.alpha_an * math.asinh(i/(2*self.i0_an))
+        #eta_cat = C_term/self.alpha_cat * math.asinh(i/(2*self.i0_cat))
+        eta_an = C_term/(2*self.alpha_an) * np.log(i/self.i0_an)
+        eta_cat = C_term/(2*self.alpha_cat) * np.log(i/self.i0_cat)
+
         eta_act = eta_an + eta_cat
 
         return eta_act#, eta_an, eta_cat
