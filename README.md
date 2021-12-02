@@ -1,1 +1,1 @@
-# HyNuRECT: Hybrid Nuclear Renewable Energy Coupling Tool
+# HyNuRT: Hybrid Nuclear Renewable Tool
