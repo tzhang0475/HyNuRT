@@ -27,7 +27,7 @@ sys.path.insert(1, '/home/tzhang/gitRepo/HyNuRECT/')
 from grid import *
 from H2Cell import *
 from windData import *
-from SMR import *
+from nuclear import *
 from wind_turbine import *
 from material import *
 from sys_control import *
