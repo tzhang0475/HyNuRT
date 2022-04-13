@@ -5,3 +5,10 @@ ratio system fit the grid demands - RFG: 1.0000
 system net present value (in million $) - NPV: 29286.782080599678
 system internal rate of return - IRR: 0.08055515901185573
 
+
+system configuarion: 6 150 300 1 
+total energy abandoned in lifetime (MWh) - EAB: 1998.45
+ratio system fit the grid demands - RFG: 1.0000
+system net present value (in million $) - NPV: 29211.987122126277
+system internal rate of return - IRR: 0.08048473915550859
+

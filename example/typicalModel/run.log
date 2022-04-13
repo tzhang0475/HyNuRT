@@ -1,4 +1,4 @@
- *** 2022-04-12 16:30:01.703131 *** 
+ *** 2022-04-13 23:32:41.702364 *** 
 
  ********* CLEAN INPUT FILE *********
 title = Nu-Re Model
@@ -67,8 +67,8 @@ MESSAGE: use full length of input file!
 
 
 ### running results ###
-total energy abandoned in lifetime (MWh) - EAB: 1464.70
-system levelized cost of electricity: 49.47$/MWh
+total energy abandoned in lifetime (MWh) - EAB: 1998.45
+system levelized cost of electricity: 49.53$/MWh
 ratio system fit the grid demands - RFG: 1.0000
-system net present value (in million $) - NPV: 29286.782080599678
-system internal rate of return - IRR: 0.08055515901185573
+system net present value (in million $) - NPV: 29211.987122126277
+system internal rate of return - IRR: 0.08048473915550859

@@ -24,7 +24,7 @@ sys.path.insert(1, '../../')
 
 # import libraries of package
 from grid import *
-from H2Cell import *
+from pem import *
 from windData import *
 from nuclear import *
 from wind_turbine import *
