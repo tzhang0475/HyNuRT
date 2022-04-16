@@ -1,5 +1,5 @@
 # HyNuRT: Hybrid Nuclear Renewable Tool
-HyNuRT ( **Hy**brid **Nu**clear **R**enewable **T**ool) is a toolkit to perform techno-economic analysis of a hybrid energy system. It can also perform standalone technical or economical analyses of a nuclear system, a renewable system, or a hybrid energy system, respectively.
+HyNuRT (**Hy**brid **Nu**clear **R**enewable **T**ool) is a toolkit to perform techno-economic analysis of a hybrid energy system. It can also perform standalone technical or economical analyses of a nuclear system, a renewable system, or a hybrid energy system, respectively.
 
 **CITATION**
 To cite this code, please refer to:
